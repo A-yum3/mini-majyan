@@ -3,7 +3,7 @@ import random
 from pygame.locals import *
 from settings import *
 from player import *
-from pai import *
+from tile import *
 
 class Game:
     def __init__(self):
@@ -15,17 +15,11 @@ class Game:
         self.clock = pg.time.Clock()
         # self.all_sprites = None
         self.playing = False
-        self.player_list = [You(), Cpu(), Cpu(), Cpu()]
+        # self.player_list = [You(), Cpu(), Cpu(), Cpu()]
+        self.player = You()
         self.font_name = pg.font.match_font(FONT_NAME)
-        self.basic_pais = [
-            Pai('1s', S_1), Pai('2s', S_2), Pai('3s', S_3), Pai('4s', S_4), Pai('5s', S_5), Pai('6s', S_6), Pai('7s', S_7), Pai('8s', S_8), Pai('9s', S_9),
-            Pai('1s', S_1), Pai('2s', S_2), Pai('3s', S_3), Pai('4s', S_4), Pai('5s', S_5), Pai('6s', S_6), Pai('7s', S_7), Pai('8s', S_8), Pai('9s', S_9),
-            Pai('1s', S_1), Pai('2s', S_2), Pai('3s', S_3), Pai('4s', S_4), Pai('5s', S_5), Pai('6s', S_6), Pai('7s', S_7), Pai('8s', S_8), Pai('9s', S_9),
-            Pai('1r', R_1), Pai('2r', R_2), Pai('3r', R_3), Pai('4r', R_4), Pai('5r', R_5), Pai('6r', R_6), Pai('7r', R_7), Pai('8r', R_8), Pai('9r', R_9),
-            Pai('hatu', HATU), Pai('hatu', HATU), Pai('hatu', HATU), Pai('hatu', HATU),
-            Pai('tyun', TYUN), Pai('tyun', TYUN), Pai('tyun', TYUN), Pai('tyun', TYUN),
-        ]
         self.dora = None
+        self.tiles = None
         self.load_data()
 
     # 初期ロード
@@ -44,28 +38,52 @@ class Game:
     def run(self):
         self.playing = True
         while self.playing:
-            for _ in range(4): # 東西南北
-                self.new_ba()
-                turn = 0
-                while len(self.pais) != 0: # １ゲーム
-                    tumo = self.pais.pop()
-                    self.player_list[turn % 4].action(tumo)
+            # for _ in range(4): # 東西南北
+            self.new_ba()
+            turn = 0
+            while len(self.tiles) != 0: # １ゲーム
+                tumo = self.tiles.pop()
+                print(len(self.tiles))
+                # self.player_list[turn % 4].action(tumo)
+                self.player.hands.append(tumo)
+                self.player.hands.sort(key=lambda hai: f'{hai.kind}{hai.value}')
+                self.draw()
 
-                    turn += 1
-                    self.clock.tick(FPS)
-                    self.events()
-                    self.update()
-                    self.draw()
+
+                # if judge(self.player.hands): #TODO: ５点以上の条件を追加
+                #deb
+                if True:
+                    self.screen.blit(pg.image.load(TUMO), (480, 750))
+                    self.screen.blit(pg.image.load(SKIP), (700, 750))
+                    pg.display.update()
+                    if self.wait_for_mouse_click():
+                        print("ツモ！")
+                        # TODO: 得点計算
+                        break
+                    else:
+                        self.draw()
+                        print("続行")
+
+                self.player.dahai()
+                self.draw()
+                # TODO: 他家がロン出来るかチェック
+
+                turn += 1
+                self.clock.tick(FPS)
+                self.events()
+                self.update()
+            print('end!')
 
     def new_ba(self):
         # 牌をシャッフル
-        self.pais = random.sample(self.basic_pais, len(self.basic_pais))
-        self.dora = self.pais.pop()
+        self.tiles = Tile.create_yamahai()
+        self.dora = self.tiles.pop()
 
         # 牌を配る
-        for i in range(4):
-            hands = [self.pais.pop() for _ in range(5)]
-            self.player_list[i].set_hands(hands)
+        # for i in range(4):
+        hands = [self.tiles.pop() for _ in range(5)]
+        self.player.set_hands(hands)
+            # self.player_list[i].set_hands(hands)
 
     # 更新処理
     def update(self):
@@ -82,7 +100,17 @@ class Game:
                 self.running = False
 
     def draw(self):
-        pass
+        self.screen.blit(pg.image.load(BG_IMG), (0, 0))
+        self.screen.blit(pg.image.load(BG_YAMA), (380,380))
+
+        for x, hand in enumerate(self.player.hands, 3):
+            print(hand)
+            self.screen.blit(pg.image.fromstring(hand.img_string, hand.img_size, "RGB"), (x * TILE_WIDTH, 850))
+
+        for x, hand in enumerate(self.player.pop_hands, 0):
+            self.screen.blit(pg.transform.scale(pg.image.fromstring(hand.img_string, hand.img_size, "RGB"), (53, 87)), (((x % 5)+7) * 53, 650 + (87 * int(x / 5))))
+
+        pg.display.update()
 
     def game_start_screen(self):
         #ゲームスタート画面
@@ -91,7 +119,7 @@ class Game:
     # TODO: resultの表示
     def game_over_screen(self):
         # ゲームオーバー画面
-        pass
+        g.running = False
 
     def wait_for_mouse(self):
         waiting = True
@@ -103,6 +131,23 @@ class Game:
                     self.running = False
                 if event.type == pg.MOUSEBUTTONUP:
                     waiting = False
+
+    def wait_for_mouse_click(self):
+        waiting = True
+        while waiting:
+            self.clock.tick(FPS)
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    waiting = False
+                    self.running = False
+                if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                    x, y = event.pos
+                    if x >= 490 and x <= 675 and y >= 760 and y <= 830:
+                        waiting = False
+                        return True
+                    elif x >= 710 and x <= 900 and y >= 760 and y <= 820:
+                        waiting = False
+                        return False
 
 
 g = Game()

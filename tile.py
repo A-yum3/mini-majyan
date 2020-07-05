@@ -7,7 +7,7 @@ import copy
 
 class Tile(pg.sprite.Sprite):
     SUUPAI = 'souzu', 'akazu'
-    JIHAI = 'sangenpai'
+    JIHAI = 'tsangenpai' # ソートの関係上
     COLORS = '發中'
 
     def __init__(self, kind, value):
@@ -19,7 +19,7 @@ class Tile(pg.sprite.Sprite):
         self.img_string = pg.image.tostring(pg.image.load(os.path.join('Images', self.pic)), "RGB")
 
     def __repr__(self):
-        return self.pic
+        return f'{self.kind}_{self.value}'
 
     def __eq__(self, other):
         if not isinstance(other, Tile):
@@ -40,7 +40,7 @@ class Tile(pg.sprite.Sprite):
     def create_yamahai():
         tiles = [Tile(kind, str(value)) for kind in Tile.SUUPAI for value in range(1, 1 + 9)]
         tiles += [Tile(Tile.SUUPAI[0], str(value)) for value in range(1, 1 + 9) for _ in range(2)]
-        tiles += [Tile(Tile.JIHAI, value) for value, label in enumerate(Tile.COLORS, 1) for _in in range(4)]
+        tiles += [Tile(Tile.JIHAI, value) for value, label in enumerate(Tile.COLORS, 10) for _in in range(4)]
 
         random.shuffle(tiles)
         random.shuffle(tiles)
@@ -53,8 +53,8 @@ class Agari:
         self.mentu2 = mentu2
 
     def __repr__(self):
-        return f'[{repr(self.mentu1.tiles[0])},{repr(self.mentu1.tiles[1])},{repr(self.mentu1.tiles[2])}],'\
-            f'[{repr(self.mentu2.tiles[0])},{repr(self.mentu2.tiles[1])},{repr(self.mentu2.tiles[2])}]'
+        return f'[{self.mentu1.tiles[0]},{self.mentu1.tiles[1]},{self.mentu1.tiles[2]}],'\
+            f'[{self.mentu2.tiles[0]},{self.mentu2.tiles[1]},{self.mentu2.tiles[2]}]'
 
 class Mentu:
     KIND = 'syuntu', 'koutu'
@@ -66,7 +66,7 @@ class Mentu:
 class NoMentu(Exception):
     pass
 
-def judge(hands):
+def judge(hands, dora):
     agari_hai = []
 
     mentu_kouho = copy.deepcopy(hands)
@@ -84,7 +84,97 @@ def judge(hands):
     # コーツが2個
     agari_hai.extend(agari_koutu2(mentu_kouho, l_koutu))
 
-    return len(agari_hai) > 0
+    score = -1
+
+    if len(agari_hai) > 0:
+        # TODO: 関数切り出し
+        yakuman_score = agari_hai.pop()
+        bonus_score = yakuman_score
+        # タンヤオ、チャンタ, 緑一色、 チンヤオ, スーパーレッド
+        # 緑 2,3,4,6,8,hatu
+        hantei1 = [True for _ in range(5)]
+        hantei2 = [True for _ in range(5)]
+        bonus_point = [1,2]
+        yakuman_point = [10, 15, 20]
+        for mentu in agari_hai:
+            count1 = 0
+            count2 = 0
+            for pai in mentu.mentu1.tiles:
+                p_value = int(pai.value)
+                # 赤牌
+                if pai.kind == Tile.SUUPAI[1] or (pai.kind == Tile.JIHAI and p_value == 11):
+                    bonus_score += 1
+                    print('red')
+                # ドラ
+                if pai.kind == dora.kind and p_value == int(dora.value):
+                    bonus_score += 1
+                    print('dora')
+
+                # タンヤオ
+                if not(p_value >= 2 and p_value <= 8): # 1, 9, 字があったら
+                    hantei1[0] = False
+                    count1 += 1
+
+                # 緑一色
+                if not((p_value == Tile.SUUPAI[0] and
+                (p_value == 2 or p_value == 3 or p_value == 4 or p_value == 6 or p_value == 8)) or
+                (pai.kind == Tile.JIHAI and pai.value == 10)):
+                    hantei1[2] = False
+
+                # スーパーレッド
+                if not((pai.kind == Tile.SUUPAI[1] or (pai.kind == Tile.JIHAI and p_value == 11))):
+                    hantei1[4] = False
+
+            for pai in mentu.mentu2.tiles:
+                p_value = int(pai.value)
+                # 赤牌
+                if pai.kind == Tile.SUUPAI[1]:
+                    bonus_score += 1
+                    print("レッド")
+                # ドラ
+                if pai.kind == dora.kind and p_value == int(dora.value):
+                    bonus_score += 1
+                    print("ドラ")
+
+                # タンヤオ
+                if not(p_value >= 2 and p_value <= 8): # 1, 9, 字があったら
+                    hantei2[0] = False
+                    count2 += 1
+
+                # 緑一色
+                if not((pai.kind == Tile.SUUPAI[0] and
+                (p_value == 2 or p_value == 3 or p_value == 4 or p_value == 6 or p_value == 8)) or
+                (pai.kind == Tile.JIHAI and p_value == 10)):
+                    hantei2[2] = False
+
+                # スーパーレッド
+                if not((pai.kind == Tile.SUUPAI[1] or (pai.kind == Tile.JIHAI and p_value == 11))):
+                    hantei2[4] = False
+
+            # チャンタ
+            if not((count1 >= 1 and count1 < 3) and (count2 >= 1 and count2 < 3)):
+                hantei1[1] = False
+                hantei2[1] = False
+
+            # チンヤオ
+            if not(count1 == 3 and count2 == 3):
+                hantei1[3] = False
+                hantei2[3] = False
+
+        # 点数計算
+        for pos in range(2):
+            if hantei1[pos] and hantei2[pos]:
+                bonus_score += bonus_point[pos]
+                print(bonus_point[pos])
+
+        for pos in range(3):
+            if hantei1[pos + 2] and hantei2[pos + 2]:
+                yakuman_score += yakuman_point[pos]
+                print(yakuman_point[pos])
+
+        score = max(yakuman_score, bonus_score)
+
+    return [len(agari_hai) > 0, score]
 
 def agari_koutu0(mentu_kouho):
     try:
@@ -96,7 +186,7 @@ def agari_koutu0(mentu_kouho):
         second = find_one_syuntu(hanteiyou)
         [hanteiyou.remove(second.tiles[_]) for _ in range(3)]
 
-        return [Agari(first, second)]
+        return [Agari(first, second), 2]
 
     except NoMentu:
         return []
@@ -117,6 +207,7 @@ def agari_koutu1(mentu_kouho, l_koutu):
             [hanteiyou.remove(second.tiles[_]) for _ in range(3)]
 
             result.append(Agari(first, second))
+            result.append(3)
 
         except NoMentu:
             continue
@@ -136,9 +227,10 @@ def agari_koutu2(mentu_kouho, l_koutu):
                 [hanteiyou.remove(first.tiles[_]) for _ in range(3)]
 
                 second = Mentu(Mentu.KIND[1], [l_koutu[j] for x in range(3)])
-                [hanteiyou.remove(first.tiles[_]) for _ in range(3)]
+                [hanteiyou.remove(second.tiles[_]) for _ in range(3)]
 
                 result.append(Agari(first, second))
+                result.append(4)
 
             except NoMentu:
                 continue

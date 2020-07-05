@@ -39,25 +39,29 @@ class Game:
         self.playing = True
         while self.playing:
             # for _ in range(4): # 東西南北
+            self.load_data()
             self.new_ba()
+            self.player.pop_hands = []
             turn = 0
             while len(self.tiles) != 0: # １ゲーム
                 tumo = self.tiles.pop()
                 print(len(self.tiles))
                 # self.player_list[turn % 4].action(tumo)
-                self.player.hands.append(tumo)
+                # 理牌
                 self.player.hands.sort(key=lambda hai: f'{hai.kind}{hai.value}')
+                self.player.hands.append(tumo)
                 self.draw()
 
+                agareru, score = judge(self.player.hands, self.dora)
 
-                # if judge(self.player.hands): #TODO: ５点以上の条件を追加
-                #deb
-                if True:
+                if agareru and score >= 5 :
+                # if True:  #deb
                     self.screen.blit(pg.image.load(TUMO), (480, 750))
                     self.screen.blit(pg.image.load(SKIP), (700, 750))
                     pg.display.update()
                     if self.wait_for_mouse_click():
                         print("ツモ！")
+                        print(score)
                         # TODO: 得点計算
                         break
                     else:
@@ -103,8 +107,10 @@ class Game:
         self.screen.blit(pg.image.load(BG_IMG), (0, 0))
         self.screen.blit(pg.image.load(BG_YAMA), (380,380))
 
+        self.screen.blit(pg.transform.scale(pg.image.fromstring(self.dora.img_string, self.dora.img_size, "RGB"), (53, 87)), (20, 20))
+
         for x, hand in enumerate(self.player.hands, 3):
-            print(hand)
+            if x == 8: x = 9
             self.screen.blit(pg.image.fromstring(hand.img_string, hand.img_size, "RGB"), (x * TILE_WIDTH, 850))
 
         for x, hand in enumerate(self.player.pop_hands, 0):
@@ -140,6 +146,7 @@ class Game:
                 if event.type == pg.QUIT:
                     waiting = False
                     self.running = False
+                    return False
                 if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                     x, y = event.pos
                     if x >= 490 and x <= 675 and y >= 760 and y <= 830:

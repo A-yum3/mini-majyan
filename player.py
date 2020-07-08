@@ -41,19 +41,27 @@ class You(Player):
                     sys.exit()
                 if (event.type == pg.MOUSEBUTTONDOWN and event.button == 1):
                     x, y = event.pos
+                    print(x)
+                    print(y)
                     if y >= 850 and y <= 990:
-                        if x >= 271 and x <= 350:
+                        if x >= 270 and x <= 350:
                             hand = self.hands.pop(0)
-                        if x >= 351 and x <= 430:
+                            break
+                        elif x >= 355 and x <= 433:
                             hand = self.hands.pop(1)
-                        if x >= 431 and x <= 510:
+                            break
+                        elif x >= 448 and x <= 530:
                             hand = self.hands.pop(2)
-                        if x >= 511 and x <= 590:
+                            break
+                        elif x >= 535 and x <= 630:
                             hand = self.hands.pop(3)
-                        if x >= 591 and x <= 670:
+                            break
+                        elif x >= 635 and x <= 710:
                             hand = self.hands.pop(4)
-                        if x >= 800 and x <= 880:
+                            break
+                        elif x >= 800 and x <= 890:
                             hand = self.hands.pop(5)
+                            break
         self.pop_hands.append(hand)
         return hand
 

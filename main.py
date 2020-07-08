@@ -1,5 +1,4 @@
 import pygame as pg
-import random
 from pygame.locals import *
 from settings import *
 from player import *
@@ -48,6 +47,10 @@ class Game:
     def new(self):
         self.run()
 
+    ####################
+    ##     メイン     ##
+    ####################
+
     # プレイ中動作
     def run(self):
         self.playing = True
@@ -62,7 +65,6 @@ class Game:
                 while len(self.tiles) > 0: # １ゲーム
                     player = self.player_list[turn % 4]
                     # TODO: 全般的に関数化する
-                    # TODO: ４人用にself.player部を変更する
                     tumo = self.tiles.pop()
                     print(len(self.tiles)) #TODO: 残り牌描画
 

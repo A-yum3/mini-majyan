@@ -16,7 +16,7 @@ class Game:
         self.clock = pg.time.Clock()
         self.playing = False
         self.player_list = [You(1), You(2), You(3), You(4)]
-        # self.font_name = pg.font.match_font(FONT_NAME)
+        self.font = pg.font.Font(FONT_NAME, 24)
         self.dora = None
         self.tiles = None
         # self.all_pop_pai = None
@@ -66,12 +66,11 @@ class Game:
                     player = self.player_list[turn % 4]
                     # TODO: 全般的に関数化する
                     tumo = self.tiles.pop()
-                    print(len(self.tiles)) #TODO: 残り牌描画
-
                     # 理牌
                     player.hands.sort(key=lambda hai: f'{hai.kind}{hai.value}')
                     player.hands.append(tumo)
                     self.draw(turn)
+                    self.draw_info_text(turn, t_n_s_p)
 
                     agareru, score = judge(player.hands, self.dora)
 
@@ -90,7 +89,6 @@ class Game:
                             print("続行")
 
                     player.dahai()
-                    self.draw(turn)
                     # TODO: 他家がロン出来るかチェック
 
                     turn += 1
@@ -131,6 +129,21 @@ class Game:
     ####################
     ##      描画      ##
     ####################
+
+    def draw_info_text(self, turn, t_n_s_p):
+        rect_list = []
+        wind_list = ['東', '南', '西', '北']
+        xy_list = [(500, 570), (570, 510), (500, 440), (440, 510)]
+
+        nokori_pai_count_text = self.font.render(f'余 {len(self.tiles)}', True, CYAN)
+        wind_text = self.font.render(f'{wind_list[t_n_s_p]}', True, CYAN)
+        for i in range(4):
+            point_text = self.font.render(f'{self.player_list[(turn + i) % 4].point}', True, YELLOW)
+            rect_list.append(self.screen.blit(pg.transform.rotate(point_text, 90 * i), xy_list[i]))
+        rect_list.append(self.screen.blit(wind_text, (503, 485)))
+        rect_list.append(self.screen.blit(nokori_pai_count_text, (485, 530)))
+
+        pg.display.update(rect_list)
 
     def draw(self, turn):
         self.draw_bg_img()

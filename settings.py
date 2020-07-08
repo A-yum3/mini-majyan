@@ -7,7 +7,7 @@ TITLE = "Mini 麻雀"
 WIDTH = 1024
 HEIGHT = 1024
 FPS = 60
-FONT_NAME = ''
+FONT_NAME = os.path.join('font', 'ackaisyo.ttf')
 TILE_WIDTH = 89
 TILE_HEIGHT = 145
 TILE_MINI_SIZE = (int(TILE_WIDTH * 0.6), int(TILE_HEIGHT * 0.6))
@@ -40,4 +40,5 @@ GREEN = (60, 186, 84)
 RED = (219, 50, 54)
 YELLOW = (244, 194, 13)
 BLUE = (72, 133, 237)
+CYAN = (57, 183, 201)
 

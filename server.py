@@ -57,7 +57,6 @@ def threaded_client(conn, p, gameId):
                         game.new_ba()
                         print("new_ba")
 
-                    print(data)
                     print(game)
                     conn.sendall(pickle.dumps(game))
             else:

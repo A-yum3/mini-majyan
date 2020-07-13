@@ -15,8 +15,8 @@ class Tile(pg.sprite.Sprite):
         self.kind = kind # 牌の種類(ソーズ・三元牌)
         self.value = value # 牌の値 1~9 發中
         self.pic = f'{kind}_{value}.png'
-        self.img_size = pg.image.load(os.path.join('Images', self.pic)).get_size()
-        self.img_string = pg.image.tostring(pg.image.load(os.path.join('Images', self.pic)), "RGB")
+        # self.img_size = pg.image.load(os.path.join('Images', self.pic)).get_size()
+        # self.img_string = pg.image.tostring(pg.image.load(os.path.join('Images', self.pic)), "RGB")
 
     def __repr__(self):
         return f'{self.kind}_{self.value}'

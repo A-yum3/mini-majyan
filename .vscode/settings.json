@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "/usr/local/var/pyenv/shims/python",
+    "python.pythonPath": "/usr/local/var/pyenv/versions/3.8.3/bin/python",
     "cSpell.words": [
         "akazu",
         "bilt",

@@ -9,28 +9,29 @@ from tile import *
 
 # TODO: private要素をリファクタリング
 
-class Player(pg.sprite.Sprite):
+
+class Player:
     def __init__(self):
         super().__init__()
         self.hands = []
         self.pop_hands = []
         self.point = 40
-        self.wind_img = None
 
-    def set_hands(self,hands):
+    def set_hands(self, hands):
         self.hands = hands
-
-    def set_wind_img(self, wind_img):
-        self.wind_img = wind_img
 
     @abstractmethod
     def dahai(self):
         pass
 
-class You(Player):
-    def __init__(self, name):
+
+class User(Player):
+    def __init__(self, no):
         super().__init__()
-        self.name = name
+        self.name = no
+        self.action = 0
+        self.score = 0
+        self.able_to_win = False
 
     def dahai(self):
         hand = None
@@ -45,25 +46,25 @@ class You(Player):
                     print(y)
                     if y >= 850 and y <= 990:
                         if x >= 270 and x <= 350:
-                            hand = self.hands.pop(0)
+                            hand = 0
                             break
                         elif x >= 355 and x <= 433:
-                            hand = self.hands.pop(1)
+                            hand = 1
                             break
                         elif x >= 448 and x <= 530:
-                            hand = self.hands.pop(2)
+                            hand = 2
                             break
                         elif x >= 535 and x <= 630:
-                            hand = self.hands.pop(3)
+                            hand = 3
                             break
                         elif x >= 635 and x <= 710:
-                            hand = self.hands.pop(4)
+                            hand = 4
                             break
                         elif x >= 800 and x <= 890:
-                            hand = self.hands.pop(5)
+                            hand = 5
                             break
-        self.pop_hands.append(hand)
         return hand
+
 
 class Cpu(Player):
     def __init__(self):
@@ -73,13 +74,13 @@ class Cpu(Player):
     #TODO: 東西南北変わる時にリセットする
     def reset_pai_dic(self):
         self.pai_dic = {
-        'souzu_1': 3, 'souzu_2': 3, 'souzu_3': 3, 'souzu_4': 3, 'souzu_5': 3,
-        'souzu_6': 3, 'souzu_7': 3, 'souzu_8': 3, 'souzu_9': 3,
-        'akazu_1': 1, 'akazu_2': 1, 'akazu_3': 1, 'akazu_4': 1, 'akazu_5': 1,
-        'akazu_6': 1, 'akazu_7': 1, 'akazu_8': 1, 'akazu_9': 1,
-        'tsangenpai_10': 4,'tsangenpai_11': 4 }
+            'souzu_1': 3, 'souzu_2': 3, 'souzu_3': 3, 'souzu_4': 3, 'souzu_5': 3,
+            'souzu_6': 3, 'souzu_7': 3, 'souzu_8': 3, 'souzu_9': 3,
+            'akazu_1': 1, 'akazu_2': 1, 'akazu_3': 1, 'akazu_4': 1, 'akazu_5': 1,
+            'akazu_6': 1, 'akazu_7': 1, 'akazu_8': 1, 'akazu_9': 1,
+            'tsangenpai_10': 4, 'tsangenpai_11': 4}
 
-    #TODO: 自分のhandsの分も引く →タイミングを考慮
+    # TODO: 自分のhandsの分も引く →タイミングを考慮
     def declear_pai_dic(self, pai):
         self.pai_dic[pai] -= 1
 
@@ -88,7 +89,8 @@ class Cpu(Player):
         mentu_kouho.sort(key=lambda hai: f'{hai.kind}{hai.value}')
 
         #TODO: メンツが２つあって５P以下の時は期待値が一番低くなる牌を切る状態になっているので修正する
-        l_koutu = sorted([x for x in set(mentu_kouho) if mentu_kouho.count(x) >= 3])
+        l_koutu = sorted([x for x in set(mentu_kouho)
+                          if mentu_kouho.count(x) >= 3])
         try:
             mentu = None
             if len(l_koutu) >= 1:
@@ -100,7 +102,6 @@ class Cpu(Player):
                 [mentu_kouho.remove(mentu.tiles[_]) for _ in range(3)]
         except NoMentu:
             pass
-
 
             point_list = [0 for _ in range(len(mentu_kouho))]
             for index, pai in enumerate(mentu_kouho, 0):
@@ -126,13 +127,13 @@ class Cpu(Player):
                 pai_1_2_between = f'{pai_1_k}_{pai_1_v + 1}'
                 tile_is_souzu = pai_1_k == Tile.SUUPAI[0]
 
-
                 if pai_1_k == pai_2_k:
                     # リャンメン
                     if ((pai_1_v != 1 or pai_2_v != 9)
-                    and (pai_1_v + 1 == pai_2_v)
-                    and not(pai_1_v == 10)):
-                        nokori = self.pai_dic[pai_1_prev] + self.pai_dic[pai_2_next]
+                        and (pai_1_v + 1 == pai_2_v)
+                            and not(pai_1_v == 10)):
+                        nokori = self.pai_dic[pai_1_prev] + \
+                            self.pai_dic[pai_2_next]
                         all_count = 6 if tile_is_souzu else 2
                         rate = nokori / all_count
 
@@ -154,12 +155,12 @@ class Cpu(Player):
 
                     # ペンチャン
                     elif ((pai_1_v == 1 or pai_2_v == 9)
-                    and pai_1_v + 1 == pai_2_v):
+                          and pai_1_v + 1 == pai_2_v):
                         nokori = None
                         all_count = 3 if tile_is_souzu else 1
-                        if pai_1_v == 1: # 3の枚数
+                        if pai_1_v == 1:  # 3の枚数
                             nokori = self.dic[pai_2_next]
-                        else : # 7の枚数
+                        else:  # 7の枚数
                             nokori = self.dic[pai_1_prev]
                         rate = nokori / all_count
 
@@ -170,7 +171,7 @@ class Cpu(Player):
                     elif pai_1_v == pai_2_v:
                         nokori = self.dic[pai_1]
                         all_count = 1
-                        if pai_1_v == 10 or pai_1_v == 11: # 發中
+                        if pai_1_v == 10 or pai_1_v == 11:  # 發中
                             all_count = 2
                         rate = nokori / all_count
 
@@ -181,10 +182,3 @@ class Cpu(Player):
             hand = self.hands.pop(hand_idx)
             self.pop_hands.append(hand)
             return hand
-
-
-
-
-
-
-

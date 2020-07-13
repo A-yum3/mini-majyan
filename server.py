@@ -29,7 +29,7 @@ def threaded_client(conn, p, gameId):
     reply = ""
     while True:
         try:
-            data = conn.recv(4096).decode()
+            data = conn.recv(1024).decode()
 
             if gameId in games:
                 game = games[gameId]
@@ -40,17 +40,25 @@ def threaded_client(conn, p, gameId):
                 else:
                     if data == "reset":
                         game.new()
+                        print("new")
                     elif data == "tumo":
                         game.tumo(p)
+                        print("tumo")
                     elif data == "hantei":
                         game.hantei(p)
+                        print("hantei")
                     elif "dahai" in data:
                         game.dahai(p, data)
+                        print("dahai")
                     elif data == "next":
                         game.next_turn(p)
+                        print("next")
                     elif data == "new_ba":
                         game.new_ba()
+                        print("new_ba")
 
+                    print(data)
+                    print(game)
                     conn.sendall(pickle.dumps(game))
             else:
                 break
@@ -79,9 +87,9 @@ while True:
     if idCount % 4 == 1:
         games[gameId] = Game(gameId)
         print("Creating a new game...")
+        games[gameId].ready = True  # deb
     else:
         if idCount % 4 == 0:
             games[gameId].ready = True
-            games[gameId].new()
 
     start_new_thread(threaded_client, (conn, p, gameId))

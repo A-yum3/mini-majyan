@@ -51,7 +51,7 @@ class Game:
         # 役判定
         agareru, score = judge(player.hands, self.dora)
         # 親は素点＋２
-        if self.turn % 4 == 0:
+        if player_no == self.ba_count:
             score += 2
         if agareru and score >= 5:
             player.able_to_win = True
@@ -62,6 +62,9 @@ class Game:
         dahai_no = int(data[-1])
         player = self.player_list[player_no]
         player.pop_hands.append(player.hands.pop(dahai_no))
+        # 理牌
+        player.hands.sort(
+            key=lambda hai: f'{hai.kind}{hai.value}')
         player.able_to_win = False
         player.action = 3
 

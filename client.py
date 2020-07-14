@@ -7,6 +7,8 @@ from player import *
 from settings import *
 from tile import *
 
+# TODO: 音楽の追加
+
 
 class Client:
     def __init__(self, n, win):
@@ -55,7 +57,7 @@ class Client:
         current_turn = -1
 
         while self.running:
-            self.clock.tick(10)
+            self.clock.tick(30)
             try:
                 self.game = self.n.send("get")
                 print("send get")
@@ -69,6 +71,8 @@ class Client:
 
             # ツモ・ロンされた時結果を表示して次の場に移行する
             if self.game.ba_end:
+                self.drawing(self.get_tumo_effect_list())
+                pg.time.delay(1500)  # 余韻
                 self.drawing(self.get_result_screen_list())
                 pg.time.delay(3000)
                 self.n.send("new_ba")
@@ -92,7 +96,8 @@ class Client:
                 current_turn = self.game.current_turn
                 self.drawing([*self.get_tumo_others_list(turn_pos),
                               *self.get_sutepai_list(turn_pos),
-                              *self.get_info_text_list(turn_pos, current_ba_count)])
+                              *self.get_info_text_list(turn_pos, current_ba_count),
+                              *self.get_tepai_list()])
 
             # このユーザーのターン
             if self.player_no == turn_pos % 4:
@@ -112,13 +117,8 @@ class Client:
                     self.drawing(self.get_tumo_button_list())
                     if self.wait_for_mouse_click_agari():  # tumo
                         print("ツモ！")
-                        self.drawing(self.get_tumo_effect_list())
-                        pg.time.delay(1500)  # 余韻
                         print(self.player.score)
                         self.n.send("agari_tumo")
-                        # TODO: リザルト画面
-
-                        break
                     else:  # skip
                         self.drawing(self.remove_tumo_and_skip_button_list())
                         self.n.send("reject")
@@ -138,20 +138,21 @@ class Client:
                     self.n.send("new_ba")
                     print("send new_ba")
             else:
-                # ターンが変わる毎に手牌表示
-                if current_turn != self.game.current_turn:
-                    self.drawing(self.get_tepai_list())
                 # 別のユーザーのターンの時
                 print("waiting...")
+                #TODO: 他人の捨て牌でロン出来る機能の追加
 
             self.events()
 
 # メモ: Rect(切り抜く画像の始点x, 切り抜く画像の始点y, 切り抜く大きさx, 切り抜く大きさy)
 
+    # params: Rect_list
+    # return: None, 画面の更新
     def drawing(self, args_rect_list):
         rect_list = args_rect_list
         pg.display.update(rect_list)
 
+    # return: 他家の手牌Rect_list
     def get_tepai_others_list(self):
         rect_list = []
 
@@ -318,10 +319,29 @@ class Client:
         return rect_list
 
     # return: ツモした時のエフェクトRect_list
-
     def get_tumo_effect_list(self):
         rect_list = []
-        rect_list.append(self.screen.blit(self.tumo_1_img, (350, 600)))
+        print(self.game.winner_player)
+
+        if self.game.winner_player.name % 4 == self.player_no:
+            rect_list.append(self.screen.blit(self.tumo_1_img, (350, 600)))
+
+        # TODO: 後で位置調整する
+        # 下家
+        if self.game.winner_player.name % 4 == self.player_no + 1:
+            rect_list.append(self.screen.blit(pg.transform.rotate(
+                self.tumo_1_img, 90), (500, 300)))
+
+        # 対面
+        if self.game.winner_player.name % 4 == self.player_no + 2:
+            rect_list.append(self.screen.blit(pg.transform.rotate(
+                self.tumo_1_img, 180), (350, 424)))
+
+        # 上家
+        if self.game.winner_player.name % 4 == self.player_no + 3:
+            rect_list.append(self.screen.blit(pg.transform.rotate(
+                self.tumo_1_img, 270), (100, 300)))
+
         return rect_list
 
     # return: リザルト画面のRect_list
@@ -338,11 +358,14 @@ class Client:
             title = "和了！"
         text_title = font.render(f'ツモ！{title}謝謝！', True, YELLOW)
         text_score = font_mini.render(f'加点：{score}', True, YELLOW)
+        text_name = font.render(
+            f'Player {self.game.winner_player.name}', True, YELLOW)
         # TODO: 役内訳を表示する
 
         rect_list.append(self.screen.blit(self.bg_img_opa60, (0, 0)))
         rect_list.append(self.screen.blit(self.bg_result, (0, 200)))
         rect_list.append(self.screen.blit(self.senpai_img, (100, 200)))
+        rect_list.append(self.screen.blit(text_name, (600, 300)))
         rect_list.append(self.screen.blit(text_title, (600, 350)))
         rect_list.append(self.screen.blit(text_score, (800, 420)))
 

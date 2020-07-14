@@ -1,12 +1,15 @@
+import traceback
+
 import pygame as pg
 from pygame import display, draw
 from pygame.locals import *
-from settings import *
-from player import *
-from tile import *
+
 from client import *
 from network import Network
-import traceback
+from player import *
+from settings import *
+from tile import *
+
 pg.font.init()
 pg.init()
 pg.mixer.init()
@@ -69,9 +72,10 @@ def menu_screen():
             if event.type == pg.MOUSEBUTTONDOWN:
                 try:
                     n = Network()
-                    player_no = int(n.getP())
+                    player_no = n.getP()
+                    # TODO: ここの調整
                     if player_no is None:
-                        raise "offline"
+                        pass
                     else:
                         run = False
                         main()
@@ -83,4 +87,5 @@ def menu_screen():
                     player_no = None
 
 
-menu_screen()
+if __name__ == '__main__':
+    menu_screen()

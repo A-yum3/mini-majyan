@@ -56,6 +56,11 @@ def threaded_client(conn, p, gameId):
                     elif data == "new_ba":
                         game.new_ba()
                         print("new_ba")
+                    elif data == "reject":
+                        game.reject_win(p)
+                    elif data == "agari_tumo":
+                        print(data)
+                        game.agari_tumo(p)
 
                     print(game)
                     conn.sendall(pickle.dumps(game))

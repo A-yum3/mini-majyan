@@ -1,10 +1,12 @@
 # Sprite classes
+import copy
+import sys
 from abc import abstractmethod
+
 import pygame as pg
 from pygame.locals import *
+
 from settings import *
-import sys
-import copy
 from tile import *
 
 # TODO: private要素をリファクタリング

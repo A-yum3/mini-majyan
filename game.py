@@ -13,6 +13,8 @@ class Game:
         self.dora = None
         self.tiles = None
         self.id = id
+        self.ba_end = None
+        self.winner_player = None
         self.new()
 
     # ニューゲーム
@@ -24,6 +26,8 @@ class Game:
     def new_ba(self):
         self.current_turn = 0
         self.ba_count += 1
+        self.ba_end = False
+        self.winner_player = None
         # 捨て牌をリセット
         self.all_pop_pai = []
         # 全員の捨て牌リセット,
@@ -50,11 +54,13 @@ class Game:
         player = self.player_list[player_no]
         # 役判定
         agareru, score = judge(player.hands, self.dora)
-        # 親は素点＋２
-        if player_no == self.ba_count:
-            score += 2
+
+        # TODO:フリテン判定の処理
         if agareru and score >= 5:
             player.able_to_win = True
+            # 親は素点＋２
+            if player_no == self.ba_count:
+                score += 2
             player.score = score
         player.action = 2
 
@@ -71,6 +77,17 @@ class Game:
     def next_turn(self, player_no):
         self.current_turn += 1
         self.player_list[player_no].action = 0
+
+    def reject_win(self, player_no):
+        self.player_list[player_no].able_to_win = False
+
+    def agari_tumo(self, player_no):
+        # ツモアガリの時は上家からポイントを頂戴する
+        score = self.player_list[player_no].score
+        self.player_list[(player_no - 1) % 4].point -= score
+        self.player_list[player_no].point += score
+        self.winner_player = self.player_list[player_no]
+        self.ba_end = True
 
     def connected(self):
         return self.ready

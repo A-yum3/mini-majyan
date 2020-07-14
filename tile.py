@@ -1,19 +1,22 @@
-from random import random
-import pygame as pg
+import copy
 import os
 import random
+from random import random
+
+import pygame as pg
+
 from settings import *
-import copy
+
 
 class Tile(pg.sprite.Sprite):
     SUUPAI = 'souzu', 'akazu'
-    JIHAI = 'tsangenpai' # ソートの関係上
+    JIHAI = 'tsangenpai'  # ソートの関係上
     COLORS = '發中'
 
     def __init__(self, kind, value):
         super().__init__()
-        self.kind = kind # 牌の種類(ソーズ・三元牌)
-        self.value = value # 牌の値 1~9 發中
+        self.kind = kind  # 牌の種類(ソーズ・三元牌)
+        self.value = value  # 牌の値 1~9 發中
         self.pic = f'{kind}_{value}.png'
         # self.img_size = pg.image.load(os.path.join('Images', self.pic)).get_size()
         # self.img_string = pg.image.tostring(pg.image.load(os.path.join('Images', self.pic)), "RGB")
@@ -38,14 +41,18 @@ class Tile(pg.sprite.Sprite):
             return f'2_{self.value}'
 
     def create_yamahai():
-        tiles = [Tile(kind, str(value)) for kind in Tile.SUUPAI for value in range(1, 1 + 9)]
-        tiles += [Tile(Tile.SUUPAI[0], str(value)) for value in range(1, 1 + 9) for _ in range(2)]
-        tiles += [Tile(Tile.JIHAI, value) for value, label in enumerate(Tile.COLORS, 10) for _in in range(4)]
+        tiles = [Tile(kind, str(value))
+                 for kind in Tile.SUUPAI for value in range(1, 1 + 9)]
+        tiles += [Tile(Tile.SUUPAI[0], str(value))
+                  for value in range(1, 1 + 9) for _ in range(2)]
+        tiles += [Tile(Tile.JIHAI, value) for value,
+                  label in enumerate(Tile.COLORS, 10) for _in in range(4)]
 
         random.shuffle(tiles)
         random.shuffle(tiles)
         random.shuffle(tiles)
         return tiles
+
 
 class Agari:
     def __init__(self, mentu1, mentu2):
@@ -56,6 +63,7 @@ class Agari:
         return f'[{self.mentu1.tiles[0]},{self.mentu1.tiles[1]},{self.mentu1.tiles[2]}],'\
             f'[{self.mentu2.tiles[0]},{self.mentu2.tiles[1]},{self.mentu2.tiles[2]}]'
 
+
 class Mentu:
     KIND = 'syuntu', 'koutu'
 
@@ -63,8 +71,10 @@ class Mentu:
         self.kind = kind
         self.tiles = tiles
 
+
 class NoMentu(Exception):
     pass
+
 
 def judge(hands, dora):
     agari_hai = []
@@ -73,7 +83,8 @@ def judge(hands, dora):
     mentu_kouho.sort(key=lambda hai: f'{hai.kind}{hai.value}')
 
     # コーツの種類
-    l_koutu = sorted([x for x in set(mentu_kouho) if mentu_kouho.count(x) >= 3], key=lambda hai: f'{hai.kind}{hai.value}')
+    l_koutu = sorted([x for x in set(mentu_kouho) if mentu_kouho.count(
+        x) >= 3], key=lambda hai: f'{hai.kind}{hai.value}')
 
     # コーツが0個
     agari_hai.extend(agari_koutu0(mentu_kouho))
@@ -94,7 +105,7 @@ def judge(hands, dora):
         # 緑 2,3,4,6,8,hatu
         hantei1 = [True for _ in range(5)]
         hantei2 = [True for _ in range(5)]
-        bonus_point = [1,2]
+        bonus_point = [1, 2]
         yakuman_point = [10, 15, 20]
         for mentu in agari_hai:
             count1 = 0
@@ -111,14 +122,14 @@ def judge(hands, dora):
                     print('dora')
 
                 # タンヤオ
-                if not(p_value >= 2 and p_value <= 8): # 1, 9, 字があったら
+                if not(p_value >= 2 and p_value <= 8):  # 1, 9, 字があったら
                     hantei1[0] = False
                     count1 += 1
 
                 # 緑一色
                 if not((p_value == Tile.SUUPAI[0] and
-                (p_value == 2 or p_value == 3 or p_value == 4 or p_value == 6 or p_value == 8)) or
-                (pai.kind == Tile.JIHAI and pai.value == 10)):
+                        (p_value == 2 or p_value == 3 or p_value == 4 or p_value == 6 or p_value == 8)) or
+                       (pai.kind == Tile.JIHAI and pai.value == 10)):
                     hantei1[2] = False
 
                 # スーパーレッド
@@ -137,14 +148,14 @@ def judge(hands, dora):
                     print("ドラ")
 
                 # タンヤオ
-                if not(p_value >= 2 and p_value <= 8): # 1, 9, 字があったら
+                if not(p_value >= 2 and p_value <= 8):  # 1, 9, 字があったら
                     hantei2[0] = False
                     count2 += 1
 
                 # 緑一色
                 if not((pai.kind == Tile.SUUPAI[0] and
-                (p_value == 2 or p_value == 3 or p_value == 4 or p_value == 6 or p_value == 8)) or
-                (pai.kind == Tile.JIHAI and p_value == 10)):
+                        (p_value == 2 or p_value == 3 or p_value == 4 or p_value == 6 or p_value == 8)) or
+                       (pai.kind == Tile.JIHAI and p_value == 10)):
                     hantei2[2] = False
 
                 # スーパーレッド
@@ -176,6 +187,7 @@ def judge(hands, dora):
 
     return [len(agari_hai) > 0, score]
 
+
 def agari_koutu0(mentu_kouho):
     try:
         hanteiyou = copy.deepcopy(mentu_kouho)
@@ -190,6 +202,7 @@ def agari_koutu0(mentu_kouho):
 
     except NoMentu:
         return []
+
 
 def agari_koutu1(mentu_kouho, l_koutu):
     if len(l_koutu) < 1:
@@ -212,6 +225,7 @@ def agari_koutu1(mentu_kouho, l_koutu):
         except NoMentu:
             continue
     return result
+
 
 def agari_koutu2(mentu_kouho, l_koutu):
     if len(l_koutu) < 2:
@@ -237,6 +251,7 @@ def agari_koutu2(mentu_kouho, l_koutu):
 
     return result
 
+
 def find_one_syuntu(hanteiyou):
     hanteiyou.sort(key=lambda hai: f'{hai.kind}{hai.value}')
     for hanteiyou_one_tile in hanteiyou:
@@ -247,13 +262,8 @@ def find_one_syuntu(hanteiyou):
             return Mentu(Mentu.KIND[0], syuntu_kouho)
     raise NoMentu()
 
+
 def create_syuntu(tile):
     if tile.kind in Tile.SUUPAI and int(tile.value) <= 7:
         return [Tile(tile.kind, str(value))
-        for value in range(int(tile.value), int(tile.value) + 3)]
-
-
-
-
-
-
+                for value in range(int(tile.value), int(tile.value) + 3)]

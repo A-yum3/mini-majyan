@@ -15,7 +15,7 @@ WIND_BUDGE_WIDTH = int(41 * 1.1)
 WIND_BUDGE_HEIGHT = int(41 * 1.1)
 
 # Image
-BG_IMG = os.path.join('Images','Table_Dif.jpg')
+BG_IMG = os.path.join('Images', 'Table_Dif.jpg')
 BG_YAMA = os.path.join('Images', 'bg.png')
 BG_DORA = os.path.join('Images', 'dora.png')
 BG_TOU = os.path.join('Images', 'tou.png')
@@ -23,12 +23,15 @@ BG_NAN = os.path.join('Images', 'nan.png')
 BG_SYA = os.path.join('Images', 'sya.png')
 BG_PEI = os.path.join('Images', 'pei.png')
 BG_RESULT = os.path.join('Images', 'result.png')
+BG_IMG_OPA60 = os.path.join('Images', 'bg_opa60.png')
 MY_RON = os.path.join('Images', 'ron_1.png')
 MY_TUMO = os.path.join('Images', 'tumo_1.png')
 TUMO = os.path.join('Images', 'tumo.png')
+TUMO_1 = os.path.join('Images', 'tumo_1.png')
 RON = os.path.join('Images', 'ron.png')
 SKIP = os.path.join('Images', 'skip.png')
 URA = os.path.join('Images', 'ura.png')
+SENPAI = os.path.join('Images', 'senpai.png')
 
 
 # define colors
@@ -41,4 +44,3 @@ RED = (219, 50, 54)
 YELLOW = (244, 194, 13)
 BLUE = (72, 133, 237)
 CYAN = (57, 183, 201)
-

@@ -13,7 +13,7 @@ from tile import *
 pg.font.init()
 pg.init()
 pg.mixer.init()
-win = pg.display.set_mode((WIDTH, HEIGHT), RESIZABLE)
+win = pg.display.set_mode((WIDTH, HEIGHT))
 pg.display.set_caption(TITLE)
 
 

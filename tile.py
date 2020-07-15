@@ -1,7 +1,6 @@
 import copy
 import os
 import random
-from random import random
 
 import pygame as pg
 

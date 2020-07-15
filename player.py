@@ -34,6 +34,8 @@ class User(Player):
         self.action = 0
         self.score = 0
         self.able_to_win = False
+        self.judge_phase_end = False
+        self.ready = False
 
     def dahai(self):
         hand = None

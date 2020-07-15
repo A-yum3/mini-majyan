@@ -61,6 +61,17 @@ def threaded_client(conn, p, gameId):
                     elif data == "agari_tumo":
                         print(data)
                         game.agari_tumo(p)
+                    elif data == "hantei_ron":
+                        game.hantei_ron(p)
+                    elif data == "agari_ron":
+                        game.agari_ron(p)
+                    elif data == "end_of_judge":
+                        game.end_of_judge(p)
+                    elif data == "ryukyoku":
+                        game.ryukyoku(p)
+                    elif data == "ready":
+                        game.ready_player(p)
+                        print(f'{p}: ready')
 
                     print(game)
                     conn.sendall(pickle.dumps(game))
@@ -91,7 +102,7 @@ while True:
     if idCount % 4 == 1:
         games[gameId] = Game(gameId)
         print("Creating a new game...")
-        games[gameId].ready = True  # deb
+        # games[gameId].ready = True  # deb
     else:
         if idCount % 4 == 0:
             games[gameId].ready = True

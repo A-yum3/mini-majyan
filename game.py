@@ -1,6 +1,3 @@
-from os import P_ALL
-from sys import platform
-import pygame as pg
 from pygame.locals import *
 from settings import *
 from player import *
@@ -20,6 +17,8 @@ class Game:
         self.current_pop_tile = None
         self.is_ron = None
         self.is_tumo = None
+        self.current_turn = None
+        self.ba_count = None
         self.new()
 
     # ニューゲーム
@@ -34,7 +33,7 @@ class Game:
         self.ba_end = False
         self.winner_player = None
         self.current_pop_tile = None
-        self.isRon = False
+        self.is_ron = False
         self.is_tumo = False
 
         # 捨て牌をリセット
@@ -43,6 +42,7 @@ class Game:
         for i in range(4):
             self.player_list[i].pop_hands = []
             self.player_list[i].judge_phase_end = True
+            self.player_list[i].able_to_win = False
             self.player_list[i].ready = False
         # 牌をシャッフル
         self.tiles = Tile.create_yamahai()
@@ -54,6 +54,10 @@ class Game:
             # 理牌
             self.player_list[i].hands.sort(
                 key=lambda hai: f'{hai.kind}{hai.value}')
+
+            # 飛んだらゲーム終了
+            if self.player_list[i].point <= 0:
+                self.ba_count = 4
 
     def tumo(self, player_no):
         tumo = self.tiles.pop()
@@ -80,10 +84,9 @@ class Game:
 
     def hantei_ron(self, player_no):
         player = self.player_list[player_no]
-        if not self.current_pop_tile == None:
-            player.hands.append(self.current_pop_tile)
-            self.hantei(player_no)
-            player.hands.pop()
+        player.hands.append(self.current_pop_tile)
+        self.hantei(player_no)
+        player.hands.pop()
         player.action = 0
 
     def dahai(self, player_no, data):
@@ -99,7 +102,7 @@ class Game:
         for i in range(4):
             if i == player_no:
                 continue
-            self.player_list[player_no].judge_phase_end = False
+            self.player_list[i].judge_phase_end = False
 
         player.action = 3
 
@@ -107,10 +110,6 @@ class Game:
         self.current_turn += 1
         self.player_list[player_no].action = 0
 
-        for i in range(4):
-            if i == player_no:
-                continue
-            self.player_list[player_no].judge_phase_end = False
         self.current_pop_tile = None
 
     def reject_win(self, player_no):
@@ -127,9 +126,9 @@ class Game:
 
     def agari_ron(self, player_no):
         # ロンはロンされた相手からポイントを頂戴する
-        turn_pos = self.game.current_turn + self.game.ba_count
+        turn_pos = self.current_turn + self.ba_count
         score = self.player_list[player_no].score
-        self.player_list[turn_pos % 4].point -= score
+        self.player_list[(turn_pos % 4)].point -= score
         self.player_list[player_no].point += score
         self.winner_player = self.player_list[player_no]
         self.is_ron = True

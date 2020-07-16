@@ -46,8 +46,6 @@ class User(Player):
                     sys.exit()
                 if (event.type == pg.MOUSEBUTTONDOWN and event.button == 1):
                     x, y = event.pos
-                    print(x)
-                    print(y)
                     if y >= 850 and y <= 990:
                         if x >= 270 and x <= 350:
                             hand = 0

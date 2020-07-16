@@ -1,3 +1,5 @@
+import traceback
+
 import socket
 from _thread import *
 import pickle
@@ -77,8 +79,8 @@ def threaded_client(conn, p, gameId):
                     conn.sendall(pickle.dumps(game))
             else:
                 break
-        except:
-            print("Fuck")
+        except Exception as e:
+            print(traceback.format_exc(e))
             break
 
     print("接続を失いました")

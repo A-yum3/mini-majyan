@@ -8,6 +8,7 @@ from settings import *
 from tile import *
 
 # TODO: 音楽の追加
+# TODO: 役判定が正しく行われてない可能性がある(コーツ・チャンタあたり)
 
 
 class Client:
@@ -46,6 +47,7 @@ class Client:
         self.ron_efe_img = pg.image.load(RON_1).convert_alpha()
         self.bg_img_opa60 = pg.image.load(BG_IMG_OPA60).convert_alpha()
         self.senpai_img = pg.image.load(SENPAI).convert_alpha()
+        self.kouhai_img = pg.image.load(KOUHAI).convert_alpha()
 
         self.ura_mini = pg.transform.scale(self.ura, (65, 103)).convert_alpha()
 
@@ -61,10 +63,16 @@ class Client:
             self.clock.tick(30)
             try:
                 self.game = self.n.send("get")
-                print("send get")
+                # print("send get")
             except:
                 self.running = False
                 print("Couldn't get game")
+                break
+
+            if self.game.ba_count == 4:
+                print("end game")
+                self.running = False
+                # TODO 総合結果発表画面の作成
                 break
 
             self.player = self.game.player_list[self.player_no]
@@ -82,61 +90,72 @@ class Client:
             if self.player.ready or player_other1.ready or player_other2.ready or player_other3.ready:
                 continue
 
-            if current_turn == -1:
-                self.drawing([*self.get_bg_img_list(), *
-                              self.get_tepai_others_list()])
-
-            # ツモ・ロンされた時結果を表示して次の場に移行する
+            # ツモ・ロンされた時結果を表示する。流局時はそのまま次の場に移行する
             if self.game.ba_end:
                 if self.game.is_ron:
-                    self.drawing(self.get_ron_effect_list())  # TODO: 表示調整
+                    self.drawing(self.get_ron_effect_list())
+                    pg.time.delay(1500)  # 余韻
+                    self.drawing(self.get_result_screen_list(self.senpai_img))
                 elif self.game.is_tumo:
-                    self.drawing(self.get_tumo_effect_list())  # TODO: 表示調整
-                pg.time.delay(1500)  # 余韻
-                self.drawing(self.get_result_screen_list())
+                    self.drawing(self.get_tumo_effect_list())
+                    pg.time.delay(1500)  # 余韻
+                    self.drawing(self.get_result_screen_list(self.kouhai_img))
                 pg.time.delay(3000)
-                current_turn = -1
                 self.n.send("ready")
                 continue
 
             # 場が変わったら場を描画
             if current_ba_count != self.game.ba_count:
                 current_ba_count = self.game.ba_count
+                current_tiles_len = 0
+                current_turn = -1
                 print(self.game.dora)
                 self.drawing(
-                    [*self.get_wind_list(current_ba_count), *self.get_dora_list()])
+                    [*self.get_bg_img_list(),
+                     *self.get_dora_list(),
+                     *self.get_tepai_others_list(),
+                     *self.get_tepai_list(),
+                     *self.get_info_text_list(current_ba_count),
+                     #  *self.remove_nokori_text_list(),
+                     *self.get_nokori_text_list(),
+                     *self.get_wind_list(current_ba_count)])
 
             # ターン毎に捨て牌と他家ツモ表示
             if current_turn != self.game.current_turn:
-                self.drawing(self.remove_tumo_others_list(current_turn))
+                print("different turn")
+                self.drawing(self.remove_tumo_others_list(turn_pos - 1))
                 current_turn = self.game.current_turn
                 self.drawing([*self.get_tumo_others_list(turn_pos),
                               *self.get_sutepai_list(),
-                              *self.get_info_text_list(turn_pos, current_ba_count),
+                              *self.get_info_text_list(current_ba_count),
                               *self.get_tepai_list(),
-                              *self.get_wind_list(current_ba_count)])
+                              *self.get_wind_list(current_ba_count),
+                              *self.remove_nokori_text_list(),
+                              *self.get_nokori_text_list()])
 
             # 残り牌数が違う時描写
             if current_tiles_len != len(self.game.tiles):
                 current_tiles_len = len(self.game.tiles)
+                print(current_tiles_len)
                 self.drawing([*self.remove_nokori_text_list(),
                               *self.get_nokori_text_list()])
 
-                # このユーザーのターン
+            # このユーザーのターン
             if self.player_no == turn_pos % 4:
+
                 if self.player.action == 0:
                     self.n.send("tumo")
                     print("send tumo")
-                    self.drawing(self.get_tepai_list())
-                    pg.time.delay(1000)  # deb
+                    pg.time.delay(1000)
+                    continue
                 if self.player.action == 1:
                     self.drawing(self.get_tepai_list())
                     print("draw tepai")
                     self.n.send("hantei")
                     print("send hantei")
-                self.player.able_to_win = True  # deb
+                    continue
+                # self.player.able_to_win = True  # deb
                 if self.player.able_to_win:
-                    # tumo / skip button
                     self.drawing(self.get_tumo_button_list())
                     if self.wait_for_mouse_click_agari():  # tumo
                         print("ツモ！")
@@ -146,12 +165,14 @@ class Client:
                         self.drawing(self.remove_tumo_and_skip_button_list())
                         self.n.send("reject")
                         print("続行")
+                    continue
                 if self.player.action == 2:
                     num = self.player.dahai()
-                    self.game = self.n.send(f'dahai_{num}')
+                    self.n.send(f'dahai_{num}')
                     print(f"send dahai_{num}")
                     self.drawing([*self.get_tepai_list(),
                                   *self.get_sutepai_list()])
+                    continue
                 print("ron waiting")
                 if (self.player.action == 3
                     and player_other1.judge_phase_end
@@ -159,17 +180,21 @@ class Client:
                         and player_other3.judge_phase_end):
                     self.n.send("next")
                     print("send next")
+
                     # 流局
-                if len(self.game.tiles) <= 0:
-                    self.n.send("ryukyoku")
+                    if len(self.game.tiles) <= 0:
+                        self.n.send("ryukyoku")
+                        print("send ryukyoku")
 
             else:
                 # 別のユーザーのターンの時
-                print("waiting...")
+                # print("waiting...")
+                # print(self.player.judge_phase_end)
                 # TODO: 他人の捨て牌でロン出来る機能の追加
                 if not self.player.judge_phase_end:
                     print("ロン判定")
                     self.game = self.n.send("hantei_ron")
+                    print("send hantei_ron")
                     if self.game.player_list[self.player_no].able_to_win:
                         self.drawing(self.get_ron_button_list())
                         if self.wait_for_mouse_click_agari():
@@ -182,14 +207,14 @@ class Client:
                             self.drawing(
                                 self.remove_tumo_and_skip_button_list())
                     self.n.send("end_of_judge")
+                    print("send end_of_judge")
             self.events()
 
 # メモ: Rect(切り抜く画像の始点x, 切り抜く画像の始点y, 切り抜く大きさx, 切り抜く大きさy)
-# current_turn % 4(turn_pos) は親(東)の位置を表している
+# current_turn % 4(==turn_pos) は親(東)の位置(始点)を表している
 
     # params: Rect_list
     # return: None, 画面の更新
-
     def drawing(self, args_rect_list):
         rect_list = args_rect_list
         pg.display.update(rect_list)
@@ -206,12 +231,12 @@ class Client:
         # 対面手牌
         for i in range(5):
             rect_list.append((self.screen.blit(pg.transform.rotate(
-                self.ura_mini, 0), (450 + (i * 65), 40))))
+                self.ura_mini, 180), (450 + (i * 65), 40))))
 
         # 上家手牌
         for i in range(5):
             rect_list.append(self.screen.blit(pg.transform.rotate(
-                self.ura_mini, 90), (20, 300 + (i * 65))))
+                self.ura_mini, 270), (20, 300 + (i * 65))))
 
         return rect_list
 
@@ -230,10 +255,13 @@ class Client:
         return rect_list
 
     # return: 現場、各ポイント、余り牌のRect_list
-    def get_info_text_list(self, turn, ba_count):
+    def get_info_text_list(self, ba_count):
         rect_list = []
         wind_list = ['東', '南', '西', '北']
         xy_list = [(500, 570), (570, 510), (500, 440), (440, 510)]
+
+        rect_list.append(self.screen.blit(
+            self.bg_img, (380, 380), (380, 380, 270, 273)))
 
         rect_list.append(self.screen.blit(
             self.bg_yama, (380, 380), (0, 0, 270, 273)))
@@ -241,7 +269,7 @@ class Client:
         wind_text = self.font.render(f'{wind_list[ba_count]}', True, CYAN)
         for i in range(4):
             point_text = self.font.render(
-                f'{self.game.player_list[(turn + i) % 4].point}', True, YELLOW)
+                f'{self.game.player_list[(self.player_no + i) % 4].point}', True, YELLOW)
             rect_list.append(self.screen.blit(
                 pg.transform.rotate(point_text, 90 * i), xy_list[i]))
         rect_list.append(self.screen.blit(wind_text, (503, 485)))
@@ -310,7 +338,7 @@ class Client:
         # 対面捨て牌
         for k, hand in enumerate(self.game.player_list[(self.player_no - 2) % 4].pop_hands, 0):
             x = 600 - ((k % 5) * 53)
-            y = 300 - (87 * int(k / 5))
+            y = 290 - (87 * int(k / 5))
             temp_img = pg.transform.rotate(pg.transform.scale(pg.image.load(
                 os.path.join('Images', hand.pic)), TILE_MINI_SIZE), 180).convert_alpha()
             rect_list.append(self.screen.blit(temp_img, (x, y)))
@@ -398,24 +426,23 @@ class Client:
         rect_list = []
         print(self.game.winner_player)
 
-        if self.game.winner_player.name % 4 == self.player_no:
+        if self.game.winner_player.name == self.player_no:
             rect_list.append(self.screen.blit(self.tumo_efe_img, (350, 600)))
 
-        # TODO: 後で位置調整する
         # 下家
-        if self.game.winner_player.name % 4 == self.player_no + 1:
+        if self.game.winner_player.name == (self.player_no + 1) % 4:
             rect_list.append(self.screen.blit(pg.transform.rotate(
-                self.tumo_efe_img, 90), (500, 300)))
+                self.tumo_efe_img, 90), (650, 350)))
 
         # 対面
-        if self.game.winner_player.name % 4 == self.player_no + 2:
+        if self.game.winner_player.name == (self.player_no + 2) % 4:
             rect_list.append(self.screen.blit(pg.transform.rotate(
-                self.tumo_efe_img, 180), (350, 424)))
+                self.tumo_efe_img, 180), (380, 270)))
 
         # 上家
-        if self.game.winner_player.name % 4 == self.player_no + 3:
+        if self.game.winner_player.name == (self.player_no + 3) % 4:
             rect_list.append(self.screen.blit(pg.transform.rotate(
-                self.tumo_efe_img, 270), (100, 300)))
+                self.tumo_efe_img, 270), (270, 300)))
 
         return rect_list
 
@@ -423,29 +450,29 @@ class Client:
         rect_list = []
         print(self.game.winner_player)
 
-        if self.game.winner_player.name % 4 == self.player_no:
+        if self.game.winner_player.name == self.player_no:
             rect_list.append(self.screen.blit(self.ron_efe_img, (350, 600)))
 
         # TODO: 後で位置調整する
         # 下家
-        if self.game.winner_player.name % 4 == self.player_no + 1:
+        if self.game.winner_player.name == (self.player_no + 1) % 4:
             rect_list.append(self.screen.blit(pg.transform.rotate(
-                self.ron_efe_img, 90), (500, 300)))
+                self.ron_efe_img, 90), (650, 350)))
 
         # 対面
-        if self.game.winner_player.name % 4 == self.player_no + 2:
+        if self.game.winner_player.name == (self.player_no + 2) % 4:
             rect_list.append(self.screen.blit(pg.transform.rotate(
-                self.ron_efe_img, 180), (350, 424)))
+                self.ron_efe_img, 180), (380, 270)))
 
         # 上家
-        if self.game.winner_player.name % 4 == self.player_no + 3:
+        if self.game.winner_player.name == (self.player_no + 3) % 4:
             rect_list.append(self.screen.blit(pg.transform.rotate(
-                self.ron_efe_img, 270), (100, 300)))
+                self.ron_efe_img, 270), (270, 300)))
 
         return rect_list
 
     # return: リザルト画面のRect_list
-    def get_result_screen_list(self):
+    def get_result_screen_list(self, img):
         # TODO: フェードイン効果を追加する
         rect_list = []
         font = pg.font.Font(FONT_NAME, 48)
@@ -465,7 +492,7 @@ class Client:
 
         rect_list.append(self.screen.blit(self.bg_img_opa60, (0, 0)))
         rect_list.append(self.screen.blit(self.bg_result, (0, 200)))
-        rect_list.append(self.screen.blit(self.senpai_img, (100, 200)))
+        rect_list.append(self.screen.blit(img, (100, 200)))
         rect_list.append(self.screen.blit(text_name, (600, 350)))
         rect_list.append(self.screen.blit(text_title, (600, 400)))
         rect_list.append(self.screen.blit(text_score, (800, 470)))

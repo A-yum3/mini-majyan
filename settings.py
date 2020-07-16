@@ -31,6 +31,7 @@ RON_1 = os.path.join('Images', 'ron_1.png')
 SKIP = os.path.join('Images', 'skip.png')
 URA = os.path.join('Images', 'ura.png')
 SENPAI = os.path.join('Images', 'senpai.png')
+KOUHAI = os.path.join('Images', 'kouhai.png')
 
 
 # define colors

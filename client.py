@@ -7,11 +7,9 @@ from player import *
 from settings import *
 from tile import *
 
-# TODO: 総合結果発表画面の作成
 # TODO: メニュー画面の詳細作成
 # TODO: 音楽の追加
 # TODO: フリテン処理
-# TODO: 再戦処理
 # TODO: 役名を結果に表示する
 # TODO: 上がり時の手牌表示
 # TODO: オーラスの表示
@@ -19,6 +17,7 @@ from tile import *
 # TODO: 同時ロンが出来ないので考慮する
 # TODO: 役判定が正しく行われてない可能性がある(コーツ・チャンタあたり)
 # TODO: ルール説明のPDF
+# FUTURE: 再戦処理
 
 
 class Client:
@@ -64,6 +63,9 @@ class Client:
         self.result_bar_one_img = pg.image.load(RESULT_BAR_ONE).convert_alpha()
         self.ura_mini = pg.transform.scale(self.ura, (65, 103)).convert_alpha()
         self.hude_img = pg.image.load(HUDE).convert_alpha()
+        self.han_img = pg.image.load(HAN).convert_alpha()
+        self.ten_img = pg.image.load(TEN).convert_alpha()
+        self.kakunin_img = pg.image.load(KAKUNIN).convert_alpha()
 
     def run(self):
         self.drawing([*self.get_bg_img_list(), *self.get_tepai_others_list()])
@@ -82,13 +84,11 @@ class Client:
                 print("Couldn't get game")
                 break
 
-            # test
-            # self.last_result_flow()
-
             if self.game.ba_count == 4:
                 print("end game")
-                self.running = False
-                # TODO 総合結果発表画面の作成
+                self.last_result_flow()
+                if self.wait_for_mouse_click_kakunin():
+                    self.running = False
                 break
 
             self.player = self.game.player_list[self.player_no]
@@ -522,31 +522,55 @@ class Client:
 
         return rect_list
 
+    # return: 最終結果発表の詳細Rect_list
     def get_last_result_screen_rank_player_list(self, rank, player):
         rect_list = []
         pos_bg = [(380, 300), (450, 450), (500, 550), (550, 650)]
         pos_rank_text = [(405, 300), (475, 455), (525, 555), (575, 655)]
         pos_rank_back_text = [(425, 350), (485, 490), (535, 590), (585, 690)]
-        pos_hude = [(0, 0), (470, 455), (520, 555), (570, 655)]
+        pos_hude = [(400, 300), (470, 455), (520, 555), (570, 655)]
+        pos_player_name_text = [(500, 330), (560, 480), (610, 580), (660, 680)]
+        pos_ten = [(830, 330), (815, 470), (865, 570), (915, 670)]
+        pos_point = [(785, 325), (785, 472), (835, 572), (880, 672)]
         font = pg.font.Font(FONT_NAME, 48)
         font_mini = pg.font.Font(FONT_NAME, 32)
         rank_text = None
         rank_back_text = None
+        player_name_text = None
+        point_text = None
 
         if rank == 0:
             rect_list.append(self.screen.blit(
                 self.result_bar_one_img, pos_bg[rank]))
             rank_text = font.render(f'{rank + 1}', True, YELLOW)
             rank_back_text = font.render(f'位', True, YELLOW)
+            player_name_text = font.render(
+                f'Player {player.name}', True, YELLOW)
+            point_text = font.render(
+                f'{player.point}', True, YELLOW)
+            rect_list.append(self.screen.blit(pg.transform.scale(
+                self.hude_img, (65, 109)), pos_hude[rank]))
+            rect_list.append(self.screen.blit(pg.transform.scale(
+                self.ten_img, (48, 42)), pos_ten[rank]))
+            rect_list.append(self.screen.blit(point_text, pos_point[rank]))
         else:
             rect_list.append(self.screen.blit(
                 self.result_bar_img, pos_bg[rank]))
             rank_text = font_mini.render(f'{rank + 1}', True, WHITE)
             rank_back_text = font_mini.render(f'位', True, WHITE)
-        rect_list.append(self.screen.blit(self.hude_img, pos_hude[rank]))
+            player_name_text = font_mini.render(
+                f'Player {player.name}', True, WHITE)
+            point_text = font_mini.render(
+                f'{player.point}', True, WHITE)
+            rect_list.append(self.screen.blit(self.hude_img, pos_hude[rank]))
+            rect_list.append(self.screen.blit(self.ten_img, pos_ten[rank]))
+            rect_list.append(self.screen.blit(point_text, pos_point[rank]))
+
         rect_list.append(self.screen.blit(rank_text, pos_rank_text[rank]))
         rect_list.append(self.screen.blit(
             rank_back_text, pos_rank_back_text[rank]))
+        rect_list.append(self.screen.blit(
+            player_name_text, pos_player_name_text[rank]))
 
         return rect_list
 
@@ -562,19 +586,22 @@ class Client:
             self.drawing(self.get_result_screen_list(self.kouhai_img))
         pg.time.delay(3000)
 
+    # return: None, 最終結果画面表示処理
     def last_result_flow(self):
         self.drawing(self.get_last_result_screen_bg_list())
-        #TODO: 得点順にソートしたプレイヤーリスト
-        self.drawing(
-            self.get_last_result_screen_rank_player_list(3, 0))
-        self.drawing(
-            self.get_last_result_screen_rank_player_list(2, 0))
-        self.drawing(
-            self.get_last_result_screen_rank_player_list(1, 0))
-        self.drawing(
-            self.get_last_result_screen_rank_player_list(0, 0))
 
-        pg.time.delay(5000)
+        player_list = sorted(self.game.player_list,
+                             key=lambda player: player.point, reverse=True)
+        # 3, 2, 1, 0...
+        for i in reversed(range(4)):
+            self.drawing(
+                self.get_last_result_screen_rank_player_list(i, player_list[i]))
+            pg.time.delay(2000)
+
+        self.drawing(self.screen.blit(self.kakunin_img, (800, 800)))
+        #TODO: 確認ボタンクリックでタイトルに戻る
+
+        pg.time.delay(3000)
 
     def events(self):
         # バツボタンを押されたら終了する
@@ -584,6 +611,21 @@ class Client:
                 pg.quit()
 
         # ロン・ツモ用のマウスクリックHelper関数
+
+    def wait_for_mouse_click_kakunin(self):
+        waiting = True
+        while waiting:
+            self.clock.tick(FPS)
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    waiting = False
+                    self.running = False
+                    return False
+                if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                    x, y = event.pos
+                    if x >= 800 and x <= 921 and y >= 800 and y <= 850:
+                        waiting = False
+                        return True
 
     def wait_for_mouse_click_agari(self):
         waiting = True

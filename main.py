@@ -25,6 +25,7 @@ def main():
         game = n.send("get")
         if game.connected():
             Client(n, win)
+            run = False
         else:
             waiting_screen()
         pg.display.update()
@@ -79,7 +80,6 @@ def menu_screen():
                     else:
                         run = False
                         main()
-                        break
                 except Exception as e:
                     print(traceback.format_exc(e))
                     print("Server offline")

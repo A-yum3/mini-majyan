@@ -5,9 +5,9 @@ from _thread import *
 import pickle
 from game import Game
 
-server = "localhost"
+server = ''  # 空文字指定でipv4全て受け付ける
 port = 5555
-server_ip = socket.gethostbyname(server)
+server_ip = "192.168.0.9"  # 自分のipアドレスを指定してもOK
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -104,7 +104,7 @@ while True:
     if idCount % 4 == 1:
         games[gameId] = Game(gameId)
         print("Creating a new game...")
-        # games[gameId].ready = True  # deb
+        games[gameId].ready = True  # deb
     else:
         if idCount % 4 == 0:
             games[gameId].ready = True

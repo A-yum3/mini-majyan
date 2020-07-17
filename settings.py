@@ -35,6 +35,9 @@ KOUHAI = os.path.join('Images', 'kouhai.png')
 RESULT_BAR = os.path.join('Images', 'last_result_other.png')
 RESULT_BAR_ONE = os.path.join('Images', 'last_result_one.png')
 HUDE = os.path.join('Images', 'hude.png')
+HAN = os.path.join('Images', 'han.png')
+TEN = os.path.join('Images', 'ten.png')
+KAKUNIN = os.path.join('Images', 'kakunin.png')
 
 
 # define colors

@@ -32,6 +32,9 @@ SKIP = os.path.join('Images', 'skip.png')
 URA = os.path.join('Images', 'ura.png')
 SENPAI = os.path.join('Images', 'senpai.png')
 KOUHAI = os.path.join('Images', 'kouhai.png')
+RESULT_BAR = os.path.join('Images', 'last_result_other.png')
+RESULT_BAR_ONE = os.path.join('Images', 'last_result_one.png')
+HUDE = os.path.join('Images', 'hude.png')
 
 
 # define colors

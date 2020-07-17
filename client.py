@@ -7,8 +7,18 @@ from player import *
 from settings import *
 from tile import *
 
+# TODO: 総合結果発表画面の作成
+# TODO: メニュー画面の詳細作成
 # TODO: 音楽の追加
+# TODO: フリテン処理
+# TODO: 再戦処理
+# TODO: 役名を結果に表示する
+# TODO: 上がり時の手牌表示
+# TODO: オーラスの表示
+# TODO: サーバー接続切れの時の処理調整
+# TODO: 同時ロンが出来ないので考慮する
 # TODO: 役判定が正しく行われてない可能性がある(コーツ・チャンタあたり)
+# TODO: ルール説明のPDF
 
 
 class Client:
@@ -48,12 +58,15 @@ class Client:
         self.bg_img_opa60 = pg.image.load(BG_IMG_OPA60).convert_alpha()
         self.senpai_img = pg.image.load(SENPAI).convert_alpha()
         self.kouhai_img = pg.image.load(KOUHAI).convert_alpha()
-
+        self.kouhai_mini_img = pg.transform.scale(
+            pg.image.load(KOUHAI), (461, 615)).convert_alpha()
+        self.result_bar_img = pg.image.load(RESULT_BAR).convert_alpha()
+        self.result_bar_one_img = pg.image.load(RESULT_BAR_ONE).convert_alpha()
         self.ura_mini = pg.transform.scale(self.ura, (65, 103)).convert_alpha()
-
-        self.drawing([*self.get_bg_img_list(), *self.get_tepai_others_list()])
+        self.hude_img = pg.image.load(HUDE).convert_alpha()
 
     def run(self):
+        self.drawing([*self.get_bg_img_list(), *self.get_tepai_others_list()])
         self.drawing(self.get_wind_list(0))
         current_ba_count = -1
         current_turn = -1
@@ -68,6 +81,9 @@ class Client:
                 self.running = False
                 print("Couldn't get game")
                 break
+
+            # test
+            # self.last_result_flow()
 
             if self.game.ba_count == 4:
                 print("end game")
@@ -92,24 +108,16 @@ class Client:
 
             # ツモ・ロンされた時結果を表示する。流局時はそのまま次の場に移行する
             if self.game.ba_end:
-                if self.game.is_ron:
-                    self.drawing(self.get_ron_effect_list())
-                    pg.time.delay(1500)  # 余韻
-                    self.drawing(self.get_result_screen_list(self.senpai_img))
-                elif self.game.is_tumo:
-                    self.drawing(self.get_tumo_effect_list())
-                    pg.time.delay(1500)  # 余韻
-                    self.drawing(self.get_result_screen_list(self.kouhai_img))
-                pg.time.delay(3000)
+                self.result_flow()
                 self.n.send("ready")
                 continue
 
             # 場が変わったら場を描画
             if current_ba_count != self.game.ba_count:
+                print("Change ba")
                 current_ba_count = self.game.ba_count
                 current_tiles_len = 0
                 current_turn = -1
-                print(self.game.dora)
                 self.drawing(
                     [*self.get_bg_img_list(),
                      *self.get_dora_list(),
@@ -122,7 +130,7 @@ class Client:
 
             # ターン毎に捨て牌と他家ツモ表示
             if current_turn != self.game.current_turn:
-                print("different turn")
+                print("Change Turn")
                 self.drawing(self.remove_tumo_others_list(turn_pos - 1))
                 current_turn = self.game.current_turn
                 self.drawing([*self.get_tumo_others_list(turn_pos),
@@ -190,7 +198,6 @@ class Client:
                 # 別のユーザーのターンの時
                 # print("waiting...")
                 # print(self.player.judge_phase_end)
-                # TODO: 他人の捨て牌でロン出来る機能の追加
                 if not self.player.judge_phase_end:
                     print("ロン判定")
                     self.game = self.n.send("hantei_ron")
@@ -240,6 +247,7 @@ class Client:
 
         return rect_list
 
+    # return: 残り牌数Rect_list
     def get_nokori_text_list(self):
         rect_list = []
         nokori_pai_count_text = self.font.render(
@@ -247,10 +255,11 @@ class Client:
         rect_list.append(self.screen.blit(nokori_pai_count_text, (485, 530)))
         return rect_list
 
+    # return: 残り牌数非表示化Rect_list
     def remove_nokori_text_list(self):
         rect_list = []
         rect_list.append(self.screen.blit(
-            self.bg_yama, (480, 520), (100, 140, 80, 30)))
+            self.bg_yama, (475, 525), (95, 145, 80, 35)))
 
         return rect_list
 
@@ -374,6 +383,7 @@ class Client:
 
         return rect_list
 
+    # return: 他家のツモを非表示Rect_list
     def remove_tumo_others_list(self, current_turn):
         rect_list = []
 
@@ -446,6 +456,7 @@ class Client:
 
         return rect_list
 
+    # return: ロンの表示効果Rect_list
     def get_ron_effect_list(self):
         rect_list = []
         print(self.game.winner_player)
@@ -473,7 +484,6 @@ class Client:
 
     # return: リザルト画面のRect_list
     def get_result_screen_list(self, img):
-        # TODO: フェードイン効果を追加する
         rect_list = []
         font = pg.font.Font(FONT_NAME, 48)
         font_mini = pg.font.Font(FONT_NAME, 32)
@@ -488,7 +498,6 @@ class Client:
         text_name = font.render(
             f'Player {self.game.winner_player.name}', True, YELLOW)
         # TODO: 役内訳を表示する
-        # TODO: 上がり時の手牌表示
 
         rect_list.append(self.screen.blit(self.bg_img_opa60, (0, 0)))
         rect_list.append(self.screen.blit(self.bg_result, (0, 200)))
@@ -499,6 +508,74 @@ class Client:
 
         return rect_list
 
+    # return: 最終結果発表の背景Rect_list
+    def get_last_result_screen_bg_list(self):
+        rect_list = []
+        font = pg.font.Font(FONT_NAME, 48)
+        font_mini = pg.font.Font(FONT_NAME, 32)
+
+        syukyoku_text = font.render("終局", True, WHITE)
+
+        rect_list.append(self.screen.blit(self.bg_img_opa60, (0, 0)))
+        rect_list.append(self.screen.blit(syukyoku_text, (450, 100)))
+        rect_list.append(self.screen.blit(self.kouhai_mini_img, (0, 200)))
+
+        return rect_list
+
+    def get_last_result_screen_rank_player_list(self, rank, player):
+        rect_list = []
+        pos_bg = [(380, 300), (450, 450), (500, 550), (550, 650)]
+        pos_rank_text = [(405, 300), (475, 455), (525, 555), (575, 655)]
+        pos_rank_back_text = [(425, 350), (485, 490), (535, 590), (585, 690)]
+        pos_hude = [(0, 0), (470, 455), (520, 555), (570, 655)]
+        font = pg.font.Font(FONT_NAME, 48)
+        font_mini = pg.font.Font(FONT_NAME, 32)
+        rank_text = None
+        rank_back_text = None
+
+        if rank == 0:
+            rect_list.append(self.screen.blit(
+                self.result_bar_one_img, pos_bg[rank]))
+            rank_text = font.render(f'{rank + 1}', True, YELLOW)
+            rank_back_text = font.render(f'位', True, YELLOW)
+        else:
+            rect_list.append(self.screen.blit(
+                self.result_bar_img, pos_bg[rank]))
+            rank_text = font_mini.render(f'{rank + 1}', True, WHITE)
+            rank_back_text = font_mini.render(f'位', True, WHITE)
+        rect_list.append(self.screen.blit(self.hude_img, pos_hude[rank]))
+        rect_list.append(self.screen.blit(rank_text, pos_rank_text[rank]))
+        rect_list.append(self.screen.blit(
+            rank_back_text, pos_rank_back_text[rank]))
+
+        return rect_list
+
+    # return: None, 結果画面表示処理
+    def result_flow(self):
+        if self.game.is_ron:
+            self.drawing(self.get_ron_effect_list())
+            pg.time.delay(1500)  # 余韻
+            self.drawing(self.get_result_screen_list(self.senpai_img))
+        elif self.game.is_tumo:
+            self.drawing(self.get_tumo_effect_list())
+            pg.time.delay(1500)  # 余韻
+            self.drawing(self.get_result_screen_list(self.kouhai_img))
+        pg.time.delay(3000)
+
+    def last_result_flow(self):
+        self.drawing(self.get_last_result_screen_bg_list())
+        #TODO: 得点順にソートしたプレイヤーリスト
+        self.drawing(
+            self.get_last_result_screen_rank_player_list(3, 0))
+        self.drawing(
+            self.get_last_result_screen_rank_player_list(2, 0))
+        self.drawing(
+            self.get_last_result_screen_rank_player_list(1, 0))
+        self.drawing(
+            self.get_last_result_screen_rank_player_list(0, 0))
+
+        pg.time.delay(5000)
+
     def events(self):
         # バツボタンを押されたら終了する
         for event in pg.event.get():
@@ -506,7 +583,8 @@ class Client:
                 self.running = False
                 pg.quit()
 
-    # ロン・ツモ用のマウスクリックヘルパー関数
+        # ロン・ツモ用のマウスクリックHelper関数
+
     def wait_for_mouse_click_agari(self):
         waiting = True
         while waiting:

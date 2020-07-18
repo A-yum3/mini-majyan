@@ -234,6 +234,7 @@ class Client:
         rect_list = args_rect_list
         pg.display.update(rect_list)
 
+    # return: オーラス表示Rect_list
     def get_olas_list(self):
         rect_list = []
         rect_list.append(self.screen.blit(self.olas_img, (300, 300)))
@@ -300,9 +301,12 @@ class Client:
 
     # return: 背景と山のRect_list
     def get_bg_img_list(self):
-        rect_list = list()
+        rect_list = []
+        font = pg.font.Font(FONT_NAME, 32)
+        name = font.render(f'あなたはPlayer{self.player_no}', True, WHITE)
         rect_list.append(self.screen.blit(self.bg_img, (0, 0)))
         rect_list.append(self.screen.blit(self.bg_yama, (380, 380)))
+        rect_list.append(self.screen.blit(name, (700, 0)))
 
         return rect_list
 

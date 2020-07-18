@@ -18,11 +18,15 @@ BGM_TITLE = os.path.join('music', 'lobby.wav')
 BGM_GAME = os.path.join('music', 'game.wav')
 SE_DAHAI = os.path.join('music', 'dahai11.wav')
 SE_START = os.path.join('music', 'start.wav')
+SE_NOTEN = os.path.join('music', 'noten.wav')
 # 好みで男性女性音声切り替える場合はコメントを逆にする
-SE_TUMO = os.path.join('music', 'tumo_ma.wav')
-# SE_TUMO = os.path.join('music', 'tumo_fe.wav')
-SE_RON = os.path.join('music', 'ron_ma.wav')
-# SE_RON = os.path.join('music', 'ron_fe.wav')
+# SE_TUMO = os.path.join('music', 'tumo_ma.wav')
+SE_TUMO = os.path.join('music', 'tumo_fe.wav')
+# SE_RON = os.path.join('music', 'ron_ma.wav')
+SE_RON = os.path.join('music', 'ron_fe.wav')
+SE_BURN = os.path.join('music', 'burn.wav')
+SE_YAKU = os.path.join('music', 'yaku.wav')
+SE_SCORE = os.path.join('music', 'score.wav')
 
 # Image
 BG_IMG = os.path.join('Images', 'Table_Dif.jpg')
@@ -55,7 +59,7 @@ BG_SUZUME = os.path.join('Images', 'suzume.png')
 LOGO = os.path.join('Images', 'logo.png')
 BATTLE = os.path.join('Images', 'syoubu.png')
 SUZUME = os.path.join('Images', 'bird_suzume.png')
-
+OLAS = os.path.join('Images', 'olas.png')
 
 # define colors
 WHITE = (255, 255, 255)

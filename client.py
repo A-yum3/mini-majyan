@@ -1,3 +1,4 @@
+import enum
 from pickle import *
 import pygame as pg
 from pygame import display, draw
@@ -54,9 +55,14 @@ class Client:
         self.han_img = pg.image.load(HAN).convert_alpha()
         self.ten_img = pg.image.load(TEN).convert_alpha()
         self.kakunin_img = pg.image.load(KAKUNIN).convert_alpha()
+        self.olas_img = pg.image.load(OLAS).convert_alpha()
         self.se_dahai = pg.mixer.Sound(SE_DAHAI)
         self.se_tumo = pg.mixer.Sound(SE_TUMO)
         self.se_ron = pg.mixer.Sound(SE_RON)
+        self.se_yaku = pg.mixer.Sound(SE_YAKU)
+        self.se_score = pg.mixer.Sound(SE_SCORE)
+        self.se_noten = pg.mixer.Sound(SE_NOTEN)
+
         pg.mixer.music.load(BGM_GAME)
         pg.mixer.music.set_volume(0.5)
         pg.mixer.music.play(-1)
@@ -80,6 +86,7 @@ class Client:
 
             if self.game.ba_count == 4:
                 print("end game")
+                pg.mixer.music.stop()
                 self.last_result_flow()
                 if self.wait_for_mouse_click_kakunin():
                     self.running = False
@@ -109,9 +116,13 @@ class Client:
             # 場が変わったら場を描画
             if current_ba_count != self.game.ba_count:
                 print("Change ba")
+                pg.mixer.music.play()
                 current_ba_count = self.game.ba_count
                 current_tiles_len = 0
                 current_turn = -1
+                if current_ba_count == 3:
+                    self.drawing(self.get_olas_list())
+                    pg.time.delay(2000)
                 self.drawing(
                     [*self.get_bg_img_list(),
                      *self.get_dora_list(),
@@ -222,6 +233,11 @@ class Client:
     def drawing(self, args_rect_list):
         rect_list = args_rect_list
         pg.display.update(rect_list)
+
+    def get_olas_list(self):
+        rect_list = []
+        rect_list.append(self.screen.blit(self.olas_img, (300, 300)))
+        return rect_list
 
     # return: 他家の手牌Rect_list
     def get_tepai_others_list(self):
@@ -479,37 +495,161 @@ class Client:
 
         return rect_list
 
-    # return: リザルト画面のRect_list
-    def get_result_screen_list(self, img):
+    # return: リザルト画面の背景Rect_list
+    def get_result_back_screen_list(self, chara_img):
         rect_list = []
+
+        rect_list.append(self.screen.blit(self.bg_img_opa60, (0, 0)))
+        rect_list.append(self.screen.blit(self.bg_result, (0, 200)))
+        rect_list.append(self.screen.blit(chara_img, (0, 200)))
+        rect_list.append(self.screen.blit(self.han_img, (750, 550)))
+
+        return rect_list
+
+    # return: リザルト画面の手牌表示Rect_list
+    def get_result_tepai_list(self, player):
+        rect_list = []
+
+        for mentu in player.agari_hands:
+            for i, pai in enumerate(mentu.mentu1.tiles):
+                rect_list.append(self.screen.blit(pg.transform.scale(pg.image.load(
+                    os.path.join('Images', pai.pic)), TILE_MINI_SIZE).convert_alpha(), (600 + (i * int(TILE_WIDTH * 0.6)), 250)))
+
+            for i, pai in enumerate(mentu.mentu2.tiles):
+                rect_list.append(self.screen.blit(pg.transform.scale(pg.image.load(
+                    os.path.join('Images', pai.pic)), TILE_MINI_SIZE).convert_alpha(), (789 + (i * int(TILE_WIDTH * 0.6)), 250)))
+
+        return rect_list
+
+    # return: リザルト画面の加点表示Rect_list
+    def get_result_score_text_list(self, player):
+        rect_list = []
+
+        font = pg.font.Font(FONT_NAME, 60)
+        score = player.score
+        text_score = font.render(f'{score}', True, YELLOW)
+
+        rect_list.append(self.screen.blit(text_score, (800, 580)))
+
+        return rect_list
+
+    # return: リザルト画面の基本テキストRect_list
+    def get_result_base_text_list(self, player, tumo_ron):
+        rect_list = []
+
         font = pg.font.Font(FONT_NAME, 48)
-        font_mini = pg.font.Font(FONT_NAME, 32)
+        text_title = None
+        score = player.score
         title = None
-        score = self.game.winner_player.score
         if score >= 10:
             title = "役満！"
         else:
             title = "和了！"
-        text_title = font.render(f'ツモ！{title}謝謝！', True, YELLOW)
-        text_score = font_mini.render(f'加点：{score}', True, YELLOW)
+        if tumo_ron == 0:
+            text_title = font.render(f'ツモ！{title}', True, YELLOW)
+        else:
+            text_title = font.render(f'ロン！{title}', True, YELLOW)
         text_name = font.render(
-            f'Player {self.game.winner_player.name}', True, YELLOW)
-        # TODO: 役内訳を表示する
+            f'Player{self.game.winner_player.name}', True, YELLOW)
 
-        rect_list.append(self.screen.blit(self.bg_img_opa60, (0, 0)))
-        rect_list.append(self.screen.blit(self.bg_result, (0, 200)))
-        rect_list.append(self.screen.blit(img, (100, 200)))
-        rect_list.append(self.screen.blit(text_name, (600, 350)))
-        rect_list.append(self.screen.blit(text_title, (600, 400)))
-        rect_list.append(self.screen.blit(text_score, (800, 470)))
+        rect_list.append(self.screen.blit(text_name, (500, 350)))
+        rect_list.append(self.screen.blit(text_title, (700, 350)))
 
         return rect_list
 
-    # return: 最終結果発表の背景Rect_list
+    # return: リザルト画面の役表示テキストRect_list
+    def get_result_yaku_text_list(self, yaku, pos):
+        rect_list = []
+
+        font_mini = pg.font.Font(FONT_NAME, 32)
+        rect_list.append(self.screen.blit(
+            font_mini.render(yaku, True, WHITE), pos))
+
+        return rect_list
+
+    # return: None リザルト画面表示
+    def result_screen_flow(self, chara_img, tumo_ron, player):
+        self.drawing(self.get_result_back_screen_list(chara_img))
+        self.drawing(self.get_result_tepai_list(player))
+        self.drawing(self.get_result_base_text_list(player, tumo_ron))
+
+        count = 0
+        pos_list = [(500, 420), (500, 470), (500, 520),
+                    (500, 570), (700, 420), (700, 470), (700, 530)]
+
+        pg.time.delay(1000)
+        for index, i in enumerate(player.judge_yaku, 0):
+            if i == 0:
+                continue
+            if index == 0:
+                self.drawing(self.get_result_yaku_text_list(
+                    "タンヤオ", pos_list[count]))
+                count += 1
+            elif index == 1:
+                self.drawing(self.get_result_yaku_text_list(
+                    "チャンタ", pos_list[count]))
+                count += 1
+            elif index == 2:
+                self.drawing(self.get_result_yaku_text_list(
+                    "緑一色", pos_list[count]))
+                count += 1
+            elif index == 3:
+                self.drawing(self.get_result_yaku_text_list(
+                    "チンヤオ", pos_list[count]))
+                count += 1
+            elif index == 4:
+                self.drawing(self.get_result_yaku_text_list(
+                    "スーパレッド", pos_list[count]))
+                count += 1
+            elif index == 5:
+                self.drawing(self.get_result_yaku_text_list(
+                    "赤ドラ", pos_list[count]))
+                count += 1
+            elif index == 6:
+                self.drawing(self.get_result_yaku_text_list(
+                    "ドラ", pos_list[count]))
+                count += 1
+            self.se_yaku.play()
+            pg.time.delay(500)
+
+        pg.time.delay(1000)
+        self.drawing(self.get_result_score_text_list(player))
+        self.se_score.play()
+
+    # return: None, タイプ別リザルト画面表示処理
+    def result_flow(self):
+        # # debug
+        # self.game.is_ron = True
+        # self.game.winner_player = self.game.player_list[self.player_no]
+        # self.game.winner_player.agari_hands = [
+        #     Agari(Mentu('koutu', [Tile('souzu', 2) for x in range(3)]), Mentu('koutu', [Tile('souzu', 7) for x in range(3)]))]
+        # self.game.winner_player.judge_yaku = [1, 1, 1, 1, 1, 3, 1]
+
+        pg.mixer.music.stop()
+        if self.game.is_ron:
+            self.se_ron.play()
+            self.drawing(self.get_ron_effect_list())
+            pg.time.delay(1500)  # 余韻
+            self.result_screen_flow(
+                self.senpai_img, 0, self.game.winner_player)
+        elif self.game.is_tumo:
+            self.se_tumo.play()
+            self.drawing(self.get_tumo_effect_list())
+            pg.time.delay(1500)  # 余韻
+            self.result_screen_flow(
+                self.kouhai_img, 1, self.game.winner_player)
+        else:
+            font = pg.font.Font(FONT_NAME, 60)
+            text = font.render('流局', True, WHITE)
+            self.se_noten.play()
+            self.drawing([self.screen.blit(self.bg_img_opa60, (0, 0)),
+                          self.screen.blit(text, (450, 450))])
+        pg.time.delay(3000)
+
+    # return: 最終リザルト発表の背景Rect_list
     def get_last_result_screen_bg_list(self):
         rect_list = []
         font = pg.font.Font(FONT_NAME, 48)
-        font_mini = pg.font.Font(FONT_NAME, 32)
 
         syukyoku_text = font.render("終局", True, WHITE)
 
@@ -519,7 +659,7 @@ class Client:
 
         return rect_list
 
-    # return: 最終結果発表の詳細Rect_list
+    # return: 最終リザルト発表の詳細Rect_list
     def get_last_result_screen_rank_player_list(self, rank, player):
         rect_list = []
         pos_bg = [(380, 300), (450, 450), (500, 550), (550, 650)]
@@ -571,21 +711,7 @@ class Client:
 
         return rect_list
 
-    # return: None, 結果画面表示処理
-    def result_flow(self):
-        if self.game.is_ron:
-            self.se_ron.play()
-            self.drawing(self.get_ron_effect_list())
-            pg.time.delay(1500)  # 余韻
-            self.drawing(self.get_result_screen_list(self.senpai_img))
-        elif self.game.is_tumo:
-            self.se_tumo.play()
-            self.drawing(self.get_tumo_effect_list())
-            pg.time.delay(1500)  # 余韻
-            self.drawing(self.get_result_screen_list(self.kouhai_img))
-        pg.time.delay(3000)
-
-    # return: None, 最終結果画面表示処理
+    # return: None, 最終リザルト画面表示処理
     def last_result_flow(self):
         self.drawing(self.get_last_result_screen_bg_list())
 
@@ -598,7 +724,7 @@ class Client:
             pg.time.delay(2000)
 
         self.drawing(self.screen.blit(self.kakunin_img, (800, 800)))
-        #TODO: 確認ボタンクリックでタイトルに戻る
+        # TODO: 確認ボタンクリックでタイトルに戻る
 
         pg.time.delay(3000)
 

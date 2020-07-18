@@ -17,6 +17,9 @@ class Player:
         super().__init__()
         self.hands = []
         self.pop_hands = []
+        self.agari_hands = None
+        # タンヤオ・チャンタ・緑一色・チンヤオ・スーパレッド・赤牌・ドラ
+        self.judge_yaku = None
         self.point = 40
 
     def set_hands(self, hands):

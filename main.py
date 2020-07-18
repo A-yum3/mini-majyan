@@ -9,17 +9,14 @@ from player import *
 from settings import *
 from tile import *
 
-# TODO: フリテン処理
-# TODO: 役名を結果に表示する
-# TODO: 上がり時の手牌表示
-# TODO: オーラスの表示
-# TODO: サーバー接続切れの時の処理調整
 # TODO: 同時ロンが出来ないので考慮する
-# TODO: 役判定が正しく行われてない可能性がある(コーツ・チャンタあたり)
+# TODO: 役判定が正しく行われてない可能性があるので検証(コーツ・チャンタあたり)
 # TODO: ルール説明のPDF
 
 # FUTURE: 再戦処理
 # FUTURE: 音楽の追加・随時
+# FUTURE: フリテン画像表示
+# FUTURE: 上がり形は2種類以上ある時があるのか検証
 
 pg.init()
 pg.font.init()

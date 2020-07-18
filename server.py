@@ -104,7 +104,7 @@ while True:
     if idCount % 4 == 1:
         games[gameId] = Game(gameId)
         print("Creating a new game...")
-        games[gameId].ready = True  # deb
+        # games[gameId].ready = True  # deb
     else:
         if idCount % 4 == 0:
             games[gameId].ready = True

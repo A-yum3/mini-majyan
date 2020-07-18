@@ -95,6 +95,8 @@ def judge(hands, dora):
     agari_hai.extend(agari_koutu2(mentu_kouho, l_koutu))
 
     score = -1
+    # タンヤオ・チャンタ・緑一色・チンヤオ・スーパレッド・赤牌・ドラ
+    hantei_rel = [0, 0, 0, 0, 0, 0, 0]
 
     if len(agari_hai) > 0:
         # TODO: 関数切り出し
@@ -139,10 +141,12 @@ def judge(hands, dora):
                 p_value = int(pai.value)
                 # 赤牌
                 if pai.kind == Tile.SUUPAI[1]:
+                    hantei_rel[5] += 1
                     bonus_score += 1
                     print("レッド")
                 # ドラ
                 if pai.kind == dora.kind and p_value == int(dora.value):
+                    hantei_rel[6] += 1
                     bonus_score += 1
                     print("ドラ")
 
@@ -174,17 +178,19 @@ def judge(hands, dora):
         # 点数計算
         for pos in range(2):
             if hantei1[pos] and hantei2[pos]:
+                hantei_rel[pos] = 1
                 bonus_score += bonus_point[pos]
                 print(bonus_point[pos])
 
         for pos in range(3):
             if hantei1[pos + 2] and hantei2[pos + 2]:
+                hantei_rel[pos + 2] = 1
                 yakuman_score += yakuman_point[pos]
                 print(yakuman_point[pos])
 
         score = max(yakuman_score, bonus_score)
 
-    return [len(agari_hai) > 0, score]
+    return [len(agari_hai) > 0, score, agari_hai, hantei_rel]
 
 
 def agari_koutu0(mentu_kouho):

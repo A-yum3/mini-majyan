@@ -71,11 +71,12 @@ class Game:
     def hantei(self, player_no):
         player = self.player_list[player_no]
         # 役判定
-        agareru, score = judge(player.hands, self.dora)
+        agareru, score, agari_hai, hantei_rel = judge(player.hands, self.dora)
 
-        # TODO:フリテン判定の処理
         if agareru and score >= 5:
             player.able_to_win = True
+            player.agari_hands = agari_hai
+            player.judge_yaku = hantei_rel
             # 親は素点＋２
             if player_no == self.ba_count:
                 score += 2
@@ -86,6 +87,10 @@ class Game:
         player = self.player_list[player_no]
         player.hands.append(self.current_pop_tile)
         self.hantei(player_no)
+        # フリテン
+        if self.current_pop_tile in player.pop_hands:
+            player.able_to_win = False
+            player.score = 0
         player.hands.pop()
         player.action = 0
 

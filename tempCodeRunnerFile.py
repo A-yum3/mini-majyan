@@ -1,1 +1,2 @@
 
+pg.mixer.init()

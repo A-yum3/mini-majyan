@@ -7,18 +7,6 @@ from player import *
 from settings import *
 from tile import *
 
-# TODO: メニュー画面の詳細作成
-# TODO: 音楽の追加
-# TODO: フリテン処理
-# TODO: 役名を結果に表示する
-# TODO: 上がり時の手牌表示
-# TODO: オーラスの表示
-# TODO: サーバー接続切れの時の処理調整
-# TODO: 同時ロンが出来ないので考慮する
-# TODO: 役判定が正しく行われてない可能性がある(コーツ・チャンタあたり)
-# TODO: ルール説明のPDF
-# FUTURE: 再戦処理
-
 
 class Client:
     def __init__(self, n, win):
@@ -66,6 +54,12 @@ class Client:
         self.han_img = pg.image.load(HAN).convert_alpha()
         self.ten_img = pg.image.load(TEN).convert_alpha()
         self.kakunin_img = pg.image.load(KAKUNIN).convert_alpha()
+        self.se_dahai = pg.mixer.Sound(SE_DAHAI)
+        self.se_tumo = pg.mixer.Sound(SE_TUMO)
+        self.se_ron = pg.mixer.Sound(SE_RON)
+        pg.mixer.music.load(BGM_GAME)
+        pg.mixer.music.set_volume(0.5)
+        pg.mixer.music.play(-1)
 
     def run(self):
         self.drawing([*self.get_bg_img_list(), *self.get_tepai_others_list()])
@@ -178,9 +172,10 @@ class Client:
                     num = self.player.dahai()
                     self.n.send(f'dahai_{num}')
                     print(f"send dahai_{num}")
-                    self.drawing([*self.get_tepai_list(),
-                                  *self.get_sutepai_list()])
+                    self.se_dahai.play()
                     continue
+                self.drawing([*self.get_tepai_list(),
+                              *self.get_sutepai_list()])
                 print("ron waiting")
                 if (self.player.action == 3
                     and player_other1.judge_phase_end
@@ -194,11 +189,13 @@ class Client:
                         self.n.send("ryukyoku")
                         print("send ryukyoku")
 
+            # 別のユーザーのターンの時
             else:
-                # 別のユーザーのターンの時
+
                 # print("waiting...")
                 # print(self.player.judge_phase_end)
                 if not self.player.judge_phase_end:
+                    self.se_dahai.play()
                     print("ロン判定")
                     self.game = self.n.send("hantei_ron")
                     print("send hantei_ron")
@@ -331,7 +328,7 @@ class Client:
         # player捨て牌
         for k, hand in enumerate(self.game.player_list[self.player_no].pop_hands, 0):
             x = 370 + ((k % 5) * 53)
-            y = 650 + (87 * int(k / 5))
+            y = 655 + (87 * int(k / 5))
             temp_img = pg.transform.scale(pg.image.load(
                 os.path.join('Images', hand.pic)), TILE_MINI_SIZE).convert_alpha()
             rect_list.append(self.screen.blit(temp_img, (x, y)))
@@ -577,10 +574,12 @@ class Client:
     # return: None, 結果画面表示処理
     def result_flow(self):
         if self.game.is_ron:
+            self.se_ron.play()
             self.drawing(self.get_ron_effect_list())
             pg.time.delay(1500)  # 余韻
             self.drawing(self.get_result_screen_list(self.senpai_img))
         elif self.game.is_tumo:
+            self.se_tumo.play()
             self.drawing(self.get_tumo_effect_list())
             pg.time.delay(1500)  # 余韻
             self.drawing(self.get_result_screen_list(self.kouhai_img))

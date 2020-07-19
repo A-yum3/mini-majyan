@@ -84,7 +84,7 @@ class Client:
                 print("Couldn't get game")
                 break
 
-            if self.game.ba_count == 4:
+            if (self.game.ba_count == 4):
                 print("end game")
                 pg.mixer.music.stop()
                 self.last_result_flow()
@@ -108,7 +108,13 @@ class Client:
                 continue
 
             # ツモ・ロンされた時結果を表示する。流局時はそのまま次の場に移行する
-            if self.game.ba_end:
+            if (self.game.ba_end
+                and self.player.judge_phase_end
+                and player_other1.judge_phase_end
+                and player_other2.judge_phase_end
+                    and player_other3.judge_phase_end):
+                if self.game.ron_count >= 2:
+                    self.is_ron = False
                 self.result_flow()
                 self.n.send("ready")
                 continue
@@ -645,6 +651,9 @@ class Client:
         else:
             font = pg.font.Font(FONT_NAME, 60)
             text = font.render('流局', True, WHITE)
+            if self.game.ron_count >= 2:
+                text_d = font.render('同時ロン', True, WHITE)
+                self.drawing(self.screen.blit(text_d, (450, 500)))
             self.se_noten.play()
             self.drawing([self.screen.blit(self.bg_img_opa60, (0, 0)),
                           self.screen.blit(text, (450, 450))])

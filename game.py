@@ -19,6 +19,7 @@ class Game:
         self.is_tumo = None
         self.current_turn = None
         self.ba_count = None
+        self.ron_count = None
         self.new()
 
     # ニューゲーム
@@ -29,6 +30,7 @@ class Game:
 
     def new_ba(self):
         self.current_turn = 0
+        self.ron_count = 0
         self.ba_count += 1
         self.ba_end = False
         self.winner_player = None
@@ -136,6 +138,7 @@ class Game:
         self.player_list[(turn_pos % 4)].point -= score
         self.player_list[player_no].point += score
         self.winner_player = self.player_list[player_no]
+        self.ron_count += 1
         self.is_ron = True
         self.ba_end = True
 

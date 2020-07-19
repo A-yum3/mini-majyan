@@ -27,6 +27,8 @@ SE_RON = os.path.join('music', 'ron_fe.wav')
 SE_BURN = os.path.join('music', 'burn.wav')
 SE_YAKU = os.path.join('music', 'yaku.wav')
 SE_SCORE = os.path.join('music', 'score.wav')
+SE_RANK1 = os.path.join('music', '1.wav')
+SE_RANK24 = os.path.join('music', '2-4.wav')
 
 # Image
 BG_IMG = os.path.join('Images', 'Table_Dif.jpg')

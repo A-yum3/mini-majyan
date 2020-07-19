@@ -75,7 +75,6 @@ def threaded_client(conn, p, gameId):
                         game.ready_player(p)
                         print(f'{p}: ready')
 
-                    print(game)
                     conn.sendall(pickle.dumps(game))
             else:
                 break

@@ -64,6 +64,8 @@ class Client:
         self.se_yaku = pg.mixer.Sound(SE_YAKU)
         self.se_score = pg.mixer.Sound(SE_SCORE)
         self.se_noten = pg.mixer.Sound(SE_NOTEN)
+        self.se_rank1 = pg.mixer.Sound(SE_RANK1)
+        self.se_rank2_4 = pg.mixer.Sound(SE_RANK24)
 
         pg.mixer.music.load(BGM_GAME)
         pg.mixer.music.set_volume(0.5)
@@ -87,7 +89,7 @@ class Client:
                 break
 
             # # debug
-            # self.result_flow()
+            # self.last_result_flow()
             # pg.time.delay(5000)
             # raise "stop"
 
@@ -741,6 +743,11 @@ class Client:
         for i in reversed(range(4)):
             self.drawing(
                 self.get_last_result_screen_rank_player_list(i, player_list[i]))
+            if i == 0:
+                self.se_rank1.play()
+            else:
+                self.se_rank2_4.play()
+
             pg.time.delay(2000)
 
         self.drawing(self.screen.blit(self.kakunin_img, (800, 800)))

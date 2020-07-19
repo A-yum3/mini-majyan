@@ -56,6 +56,8 @@ class Client:
         self.ten_img = pg.image.load(TEN).convert_alpha()
         self.kakunin_img = pg.image.load(KAKUNIN).convert_alpha()
         self.olas_img = pg.image.load(OLAS).convert_alpha()
+        self.yakuman_img = pg.image.load(YAKUMAN).convert_alpha()
+
         self.se_dahai = pg.mixer.Sound(SE_DAHAI)
         self.se_tumo = pg.mixer.Sound(SE_TUMO)
         self.se_ron = pg.mixer.Sound(SE_RON)
@@ -83,6 +85,11 @@ class Client:
                 self.running = False
                 print("Couldn't get game")
                 break
+
+            # # debug
+            # self.result_flow()
+            # pg.time.delay(5000)
+            # raise "stop"
 
             if (self.game.ba_count == 4):
                 print("end game")
@@ -122,7 +129,7 @@ class Client:
             # 場が変わったら場を描画
             if current_ba_count != self.game.ba_count:
                 print("Change ba")
-                pg.mixer.music.play()
+                pg.mixer.music.play(-1)
                 current_ba_count = self.game.ba_count
                 current_tiles_len = 0
                 current_turn = -1
@@ -221,7 +228,6 @@ class Client:
                         if self.wait_for_mouse_click_agari():
                             print("ロン！")
                             self.n.send("agari_ron")
-                            # TODO:同時ロンが出来ないので考慮する
                         else:
                             self.n.send("reject_win")
                             print("続行")
@@ -531,7 +537,7 @@ class Client:
 
         return rect_list
 
-    # return: リザルト画面の加点表示Rect_list
+    # return: リザルト画面の最終スコア表示Rect_list
     def get_result_score_text_list(self, player):
         rect_list = []
 
@@ -539,7 +545,10 @@ class Client:
         score = player.score
         text_score = font.render(f'{score}', True, YELLOW)
 
-        rect_list.append(self.screen.blit(text_score, (800, 580)))
+        if player.score >= 10:
+            rect_list.append(self.screen.blit(self.yakuman_img, (520, 550)))
+        rect_list.append(self.screen.blit(text_score, (790, 580)))
+        rect_list.append(self.screen.blit(self.ten_img, (830, 630)))
 
         return rect_list
 
@@ -550,19 +559,16 @@ class Client:
         font = pg.font.Font(FONT_NAME, 48)
         text_title = None
         score = player.score
-        title = None
-        if score >= 10:
-            title = "役満！"
-        else:
-            title = "和了！"
+        title = font.render(f'和了！', True, YELLOW)
         if tumo_ron == 0:
-            text_title = font.render(f'ツモ！{title}', True, YELLOW)
+            text_title = font.render(f'ツモ！', True, YELLOW)
         else:
-            text_title = font.render(f'ロン！{title}', True, YELLOW)
+            text_title = font.render(f'ロン！', True, YELLOW)
         text_name = font.render(
             f'Player{self.game.winner_player.name}', True, YELLOW)
 
         rect_list.append(self.screen.blit(text_name, (500, 350)))
+        rect_list.append(self.screen.blit(title, (870, 350)))
         rect_list.append(self.screen.blit(text_title, (700, 350)))
 
         return rect_list
@@ -634,6 +640,7 @@ class Client:
         # self.game.winner_player.agari_hands = [
         #     Agari(Mentu('koutu', [Tile('souzu', 2) for x in range(3)]), Mentu('koutu', [Tile('souzu', 7) for x in range(3)]))]
         # self.game.winner_player.judge_yaku = [1, 1, 1, 1, 1, 3, 1]
+        # self.game.winner_player.score = 5
 
         pg.mixer.music.stop()
         if self.game.is_ron:

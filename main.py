@@ -9,8 +9,6 @@ from player import *
 from settings import *
 from tile import *
 
-# TODO: 役判定が正しく行われてない可能性があるので検証(コーツ・チャンタあたり)
-
 # FUTURE: 再戦処理
 # FUTURE: 音楽の追加・随時
 # FUTURE: フリテン画像表示

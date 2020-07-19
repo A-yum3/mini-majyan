@@ -103,7 +103,6 @@ def judge(hands, dora):
         yakuman_score = agari_hai.pop()
         bonus_score = yakuman_score
         # タンヤオ、チャンタ, 緑一色、 チンヤオ, スーパーレッド
-        # 緑 2,3,4,6,8,hatu
         hantei1 = [True for _ in range(5)]
         hantei2 = [True for _ in range(5)]
         bonus_point = [1, 2]
@@ -115,10 +114,12 @@ def judge(hands, dora):
                 p_value = int(pai.value)
                 # 赤牌
                 if pai.kind == Tile.SUUPAI[1] or (pai.kind == Tile.JIHAI and p_value == 11):
+                    hantei_rel[5] += 1
                     bonus_score += 1
                     print('red')
                 # ドラ
                 if pai.kind == dora.kind and p_value == int(dora.value):
+                    hantei_rel[6] += 1
                     bonus_score += 1
                     print('dora')
 
@@ -128,9 +129,9 @@ def judge(hands, dora):
                     count1 += 1
 
                 # 緑一色
-                if not((p_value == Tile.SUUPAI[0] and
+                if not((pai.kind == Tile.SUUPAI[0] and
                         (p_value == 2 or p_value == 3 or p_value == 4 or p_value == 6 or p_value == 8)) or
-                       (pai.kind == Tile.JIHAI and pai.value == 10)):
+                       (pai.kind == Tile.JIHAI and p_value == 10)):
                     hantei1[2] = False
 
                 # スーパーレッド

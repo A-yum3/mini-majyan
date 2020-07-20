@@ -18,6 +18,7 @@ class Client:
         self.font = pg.font.Font(FONT_NAME, 24)
         self.n = n
         self.player_no = int(n.getP())
+        self.drawend_result = True
         print("You are player", self.player_no)
         self.load_data()
         self.run()
@@ -94,6 +95,8 @@ class Client:
             # raise "stop"
 
             if (self.game.ba_count == 4):
+                if not self.drawend_result:
+                    continue
                 print("end game")
                 pg.mixer.music.stop()
                 self.last_result_flow()
@@ -111,9 +114,7 @@ class Client:
                 # 同期後、勝利プレイヤーがリセットを送る
                 if self.game.winner_player.name == self.player_no:
                     self.n.send("new_ba")
-                continue
-
-            if self.player.ready or player_other1.ready or player_other2.ready or player_other3.ready:
+                    print("send new_ba")
                 continue
 
             # ツモ・ロンされた時結果を表示する。流局時はそのまま次の場に移行する
@@ -122,10 +123,24 @@ class Client:
                 and player_other1.judge_phase_end
                 and player_other2.judge_phase_end
                     and player_other3.judge_phase_end):
+                if self.player.ready:
+                    continue
                 if self.game.ron_count >= 2:
                     self.is_ron = False
+                self.drawend_result = False
                 self.result_flow()
                 self.n.send("ready")
+                print("send ready")
+                pg.time.delay(3000)
+                continue
+
+            if self.player.ready or player_other1.ready or player_other2.ready or player_other3.ready:
+                continue
+
+            if not self.drawend_result:
+                continue
+
+            if current_turn == 23:
                 continue
 
             # 場が変わったら場を描画
@@ -153,6 +168,7 @@ class Client:
                 print("Change Turn")
                 self.drawing(self.remove_tumo_others_list(turn_pos - 1))
                 current_turn = self.game.current_turn
+                print(current_turn)
                 self.drawing([*self.get_tumo_others_list(turn_pos),
                               *self.get_sutepai_list(),
                               *self.get_info_text_list(current_ba_count),
@@ -540,14 +556,13 @@ class Client:
         return rect_list
 
     # return: リザルト画面の最終スコア表示Rect_list
-    def get_result_score_text_list(self, player):
+    def get_result_score_text_list(self, score):
         rect_list = []
 
         font = pg.font.Font(FONT_NAME, 60)
-        score = player.score
         text_score = font.render(f'{score}', True, YELLOW)
 
-        if player.score >= 10:
+        if score >= 10:
             rect_list.append(self.screen.blit(self.yakuman_img, (520, 550)))
         rect_list.append(self.screen.blit(text_score, (790, 580)))
         rect_list.append(self.screen.blit(self.ten_img, (830, 630)))
@@ -562,7 +577,7 @@ class Client:
         text_title = None
         score = player.score
         title = font.render(f'和了！', True, YELLOW)
-        if tumo_ron == 0:
+        if tumo_ron == 1:
             text_title = font.render(f'ツモ！', True, YELLOW)
         else:
             text_title = font.render(f'ロン！', True, YELLOW)
@@ -590,6 +605,7 @@ class Client:
         self.drawing(self.get_result_back_screen_list(chara_img))
         self.drawing(self.get_result_tepai_list(player))
         self.drawing(self.get_result_base_text_list(player, tumo_ron))
+        score = player.score
 
         count = 0
         pos_list = [(500, 420), (500, 470), (500, 520),
@@ -631,7 +647,7 @@ class Client:
             pg.time.delay(500)
 
         pg.time.delay(1000)
-        self.drawing(self.get_result_score_text_list(player))
+        self.drawing(self.get_result_score_text_list(score))
         self.se_score.play()
 
     # return: None, タイプ別リザルト画面表示処理
@@ -645,18 +661,19 @@ class Client:
         # self.game.winner_player.score = 5
 
         pg.mixer.music.stop()
+        player = self.game.winner_player
         if self.game.is_ron:
             self.se_ron.play()
             self.drawing(self.get_ron_effect_list())
             pg.time.delay(1500)  # 余韻
             self.result_screen_flow(
-                self.senpai_img, 0, self.game.winner_player)
+                self.senpai_img, 0, player)
         elif self.game.is_tumo:
             self.se_tumo.play()
             self.drawing(self.get_tumo_effect_list())
             pg.time.delay(1500)  # 余韻
             self.result_screen_flow(
-                self.kouhai_img, 1, self.game.winner_player)
+                self.kouhai_img, 1, player)
         else:
             font = pg.font.Font(FONT_NAME, 60)
             text = font.render('流局', True, WHITE)
@@ -666,7 +683,7 @@ class Client:
             self.se_noten.play()
             self.drawing([self.screen.blit(self.bg_img_opa60, (0, 0)),
                           self.screen.blit(text, (450, 450))])
-        pg.time.delay(3000)
+        self.drawend_result = True
 
     # return: 最終リザルト発表の背景Rect_list
     def get_last_result_screen_bg_list(self):
@@ -736,8 +753,9 @@ class Client:
     # return: None, 最終リザルト画面表示処理
     def last_result_flow(self):
         self.drawing(self.get_last_result_screen_bg_list())
+        game = self.game
 
-        player_list = sorted(self.game.player_list,
+        player_list = sorted(game.player_list,
                              key=lambda player: player.point, reverse=True)
         # 3, 2, 1, 0...
         for i in reversed(range(4)):

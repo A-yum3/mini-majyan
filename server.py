@@ -7,7 +7,7 @@ from game import Game
 
 server = ''  # 空文字指定でipv4全て受け付ける
 port = 5555
-server_ip = "192.168.0.9"  # 自分のipアドレスを指定してもOK
+server_ip = "192.168.1.59"  # 自分のipアドレスを指定してもOK
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -105,7 +105,7 @@ while True:
         print("Creating a new game...")
         # games[gameId].ready = True  # deb
     else:
-        if idCount % 4 == 0:
+        if idCount % 4 == 0:  # deb
             games[gameId].ready = True
 
     start_new_thread(threaded_client, (conn, p, gameId))

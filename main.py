@@ -28,6 +28,8 @@ logo_img = pg.image.load(LOGO).convert_alpha()
 battle_img = pg.image.load(BATTLE).convert_alpha()
 suzume_img = pg.image.load(SUZUME).convert_alpha()
 
+# TODO: 自分の番かわかるようにする
+
 
 def main():
     clock = pg.time.Clock()
@@ -125,9 +127,9 @@ def menu_screen():
                     else:
                         run = False
                         main()
-                except:
+                except Exception as e:
                     # debug用。完成時は取り除く
-                    # print(traceback.format_exc(e))
+                    print(traceback.format_exc(e))
                     print("Server offline")
                     offline = True
                     player_no = None

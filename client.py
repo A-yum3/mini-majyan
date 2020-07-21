@@ -139,10 +139,8 @@ class Client:
                 current_ba_count = self.game.ba_count
                 current_tiles_len = 0
                 current_turn = -1
-                if current_ba_count == 3:
-                    self.drawing(self.get_olas_list())
-                    pg.time.delay(2000)
                 self.drawing_change_ba_screen(current_ba_count)
+
 
             # ターン毎に捨て牌と他家ツモ表示
             if current_turn != self.game.current_turn:
@@ -164,7 +162,7 @@ class Client:
                 self.drawing([*self.remove_nokori_text_list(),
                               *self.get_nokori_text_list()])
 
-            self.drawing()
+            pg.display.update()
 
             # このユーザーのターン
             if self.player_no == turn_pos % 4:
@@ -756,7 +754,8 @@ class Client:
                 self.se_rank1.play()
             else:
                 self.se_rank2_4.play()
-            time.sleep(2)
+            pg.display.update()
+            pg.time.delay(2000)
 
         self.drawing(self.screen.blit(self.kakunin_img, (800, 800)))
         # TODO: 確認ボタンクリックでタイトルに戻る

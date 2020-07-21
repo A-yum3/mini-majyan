@@ -6,7 +6,7 @@ import pickle
 from game import Game
 
 server = ''  # 空文字指定でipv4全て受け付ける
-port = 5555
+port = 6000
 server_ip = "192.168.0.9"  # 自分のipアドレスを指定してもOK
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -16,7 +16,9 @@ try:
 except socket.error as e:
     str(e)
 
-s.listen(4)
+print(s)
+
+s.listen()
 print("接続を待っています。サーバを開始します")
 
 connected = set()
@@ -96,6 +98,7 @@ def threaded_client(conn, p, gameId):
         or connection_state[3]):
             del games[gameId]
             print("Closing Game", gameId)
+        print(idCount)
     except:
         pass
 

@@ -80,7 +80,7 @@ class Client:
         current_tiles_len = 0
 
         while self.running:
-            self.clock.tick(30)
+            self.clock.tick(60)
             try:
                 self.game = self.n.send("get")
                 # print("send get")
@@ -754,8 +754,7 @@ class Client:
                 self.se_rank1.play()
             else:
                 self.se_rank2_4.play()
-
-            pg.time.delay(2000)
+            time.sleep(2)
 
         self.drawing(self.screen.blit(self.kakunin_img, (800, 800)))
         # TODO: 確認ボタンクリックでタイトルに戻る

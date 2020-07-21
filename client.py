@@ -7,6 +7,7 @@ from pygame.locals import *
 from player import *
 from settings import *
 from tile import *
+from network import *
 
 
 class Client:
@@ -168,6 +169,8 @@ class Client:
                 self.drawing([*self.remove_nokori_text_list(),
                               *self.get_nokori_text_list()])
 
+            #  エラー
+
             # このユーザーのターン
             if self.player_no == turn_pos % 4:
 
@@ -207,13 +210,14 @@ class Client:
                     and player_other1.judge_phase_end
                     and player_other2.judge_phase_end
                         and player_other3.judge_phase_end):
-                    self.n.send("next")
-                    print("send next")
 
                     # 流局
                     if len(self.game.tiles) <= 0:
                         self.n.send("ryukyoku")
                         print("send ryukyoku")
+                    else:
+                        self.n.send("next")
+                        print("send next")
 
             # 別のユーザーのターンの時
             else:

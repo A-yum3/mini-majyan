@@ -22,7 +22,7 @@ print("接続を待っています。サーバを開始します")
 connected = set()
 games = {}
 idCount = 0
-
+connection_state = [False, False, False, False]
 
 def threaded_client(conn, p, gameId):
     global idCount
@@ -75,6 +75,7 @@ def threaded_client(conn, p, gameId):
                         game.ready_player(p)
                         print(f'{p}: ready')
 
+                    print(game)
                     conn.sendall(pickle.dumps(game))
             else:
                 break
@@ -83,13 +84,23 @@ def threaded_client(conn, p, gameId):
             break
 
     print("接続を失いました")
+    conn.close()
     try:
-        del games[gameId]
-        print("Closing Game", gameId)
+        idCount -= 1
+        connection_state[p] = False
+        # del games[gameId]
+        # print("Closing Game", gameId)
     except:
         pass
-    idCount -= 1
-    conn.close()
+    try:
+        if not(connection_state[0]
+        and connection_state[1]
+        and connection_state[2]
+        and connection_state[3]):
+            del games[gameId]
+            print("Closing Game", gameId)
+    except:
+        pass
 
 
 while True:
@@ -98,6 +109,12 @@ while True:
 
     p = idCount % 4
     idCount += 1
+
+    for i in range(4):
+        if not connection_state[i]:
+            connection_state[i] = True
+            p = i
+            break
 
     gameId = (idCount - 1) // 4
     if idCount % 4 == 1:

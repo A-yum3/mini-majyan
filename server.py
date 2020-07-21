@@ -81,6 +81,8 @@ def threaded_client(conn, p, gameId):
                 break
         except Exception as e:
             print(traceback.format_exc(e))
+            idCount -= 1
+            print(idCount)
             break
 
     print("接続を失いました")

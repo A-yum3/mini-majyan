@@ -8,7 +8,7 @@ from player import *
 from settings import *
 from tile import *
 from network import *
-
+import asyncio
 
 class Client:
     def __init__(self, n, win):
@@ -125,7 +125,7 @@ class Client:
                 if self.game.ron_count >= 2:
                     self.is_ron = False
                 self.result_flow()
-                pg.time.delay(3000)
+                time.sleep(2)
                 self.n.send("ready")
                 continue
 
@@ -747,6 +747,7 @@ class Client:
         player_list = sorted(self.game.player_list,
                              key=lambda player: player.point, reverse=True)
         # 3, 2, 1, 0...
+        # スペック依存の可能性
         for i in reversed(range(4)):
             self.drawing(
                 self.get_last_result_screen_rank_player_list(i, player_list[i]))
@@ -754,8 +755,7 @@ class Client:
                 self.se_rank1.play()
             else:
                 self.se_rank2_4.play()
-            pg.display.update()
-            pg.time.delay(2000)
+            time.sleep(2)
 
         self.drawing(self.screen.blit(self.kakunin_img, (800, 800)))
         # TODO: 確認ボタンクリックでタイトルに戻る

@@ -131,7 +131,6 @@ class Client:
 
             # 場が変わったら場を描画
             if current_ba_count != self.game.ba_count:
-                time.sleep(3)
                 print("Change ba")
                 pg.mixer.music.play(-1)
                 current_ba_count = self.game.ba_count
@@ -170,7 +169,7 @@ class Client:
                 if self.player.action == 0:
                     self.n.send("tumo")
                     print("send tumo")
-                    pg.time.delay(1000)
+                    time.sleep(1)
                     continue
                 if self.player.action == 1:
                     self.drawing(self.get_tepai_list())

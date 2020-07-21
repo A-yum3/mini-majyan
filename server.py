@@ -84,21 +84,18 @@ def threaded_client(conn, p, gameId):
             break
 
     print("接続を失いました")
+    idCount -= 1
+    connection_state[p] = False
+    # del games[gameId]
+    # print("Closing Game", gameId)
+    if not(connection_state[0]
+    or connection_state[1]
+    or connection_state[2]
+    or connection_state[3]):
+        del games[gameId]
+        print("Closing Game", gameId)
+    print(idCount)
     conn.close()
-    try:
-        idCount -= 1
-        connection_state[p] = False
-        # del games[gameId]
-        # print("Closing Game", gameId)
-        if not(connection_state[0]
-        or connection_state[1]
-        or connection_state[2]
-        or connection_state[3]):
-            del games[gameId]
-            print("Closing Game", gameId)
-        print(idCount)
-    except:
-        pass
 
 
 while True:

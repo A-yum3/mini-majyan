@@ -114,19 +114,22 @@ class Client:
                     self.n.send("new_ba")
                 continue
 
-            if self.player.ready or player_other1.ready or player_other2.ready or player_other3.ready:
-                continue
-
             # ツモ・ロンされた時結果を表示する。流局時はそのまま次の場に移行する
             if (self.game.ba_end
                 and self.player.judge_phase_end
                 and player_other1.judge_phase_end
                 and player_other2.judge_phase_end
                     and player_other3.judge_phase_end):
+                if self.player.ready:
+                    continue
                 if self.game.ron_count >= 2:
                     self.is_ron = False
                 self.result_flow()
+                pg.time.delay(8000)
                 self.n.send("ready")
+                continue
+
+            if self.player.ready or player_other1.ready or player_other2.ready or player_other3.ready:
                 continue
 
             # 場が変わったら場を描画
@@ -673,7 +676,6 @@ class Client:
             self.se_noten.play()
             self.drawing([self.screen.blit(self.bg_img_opa60, (0, 0)),
                           self.screen.blit(text, (450, 450))])
-        time.sleep(6)
 
     # return: 最終リザルト発表の背景Rect_list
     def get_last_result_screen_bg_list(self):

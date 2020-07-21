@@ -127,6 +127,7 @@ class Client:
                     self.is_ron = False
                 self.result_flow()
                 self.n.send("ready")
+                time.sleep(5)
                 continue
 
             # 場が変わったら場を描画
@@ -673,7 +674,6 @@ class Client:
             self.se_noten.play()
             self.drawing([self.screen.blit(self.bg_img_opa60, (0, 0)),
                           self.screen.blit(text, (450, 450))])
-        time.sleep(5)
 
     # return: 最終リザルト発表の背景Rect_list
     def get_last_result_screen_bg_list(self):

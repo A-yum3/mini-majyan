@@ -6,7 +6,7 @@ import pickle
 from game import Game
 
 server = ''  # 空文字指定でipv4全て受け付ける
-port = 6000
+port = 5555
 server_ip = "192.168.0.9"  # 自分のipアドレスを指定してもOK
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -15,8 +15,6 @@ try:
     s.bind((server, port))
 except socket.error as e:
     str(e)
-
-print(s)
 
 s.listen()
 print("接続を待っています。サーバを開始します")

@@ -112,6 +112,7 @@ class Client:
                 # 同期後、勝利プレイヤーがリセットを送る
                 if self.game.winner_player.name == self.player_no:
                     self.n.send("new_ba")
+                time.sleep(3)
                 continue
 
             if self.player.ready or player_other1.ready or player_other2.ready or player_other3.ready:
@@ -250,8 +251,8 @@ class Client:
         rect_list.append(self.screen.blit(self.olas_img, (300, 300)))
         return rect_list
 
+    # return: None, 場が変わった時の初期描画
     def drawing_change_ba_screen(self, current_ba_count):
-        time.sleep(2)
         self.drawing(
             [*self.get_bg_img_list(),
             *self.get_dora_list(),
@@ -674,7 +675,6 @@ class Client:
             self.se_noten.play()
             self.drawing([self.screen.blit(self.bg_img_opa60, (0, 0)),
                           self.screen.blit(text, (450, 450))])
-        pg.time.delay(3000)
 
     # return: 最終リザルト発表の背景Rect_list
     def get_last_result_screen_bg_list(self):

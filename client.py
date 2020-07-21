@@ -125,7 +125,7 @@ class Client:
                 if self.game.ron_count >= 2:
                     self.is_ron = False
                 self.result_flow()
-                pg.time.delay(8000)
+                pg.time.delay(3000)
                 self.n.send("ready")
                 continue
 
@@ -164,7 +164,7 @@ class Client:
                 self.drawing([*self.remove_nokori_text_list(),
                               *self.get_nokori_text_list()])
 
-            #  エラー
+            self.drawing()
 
             # このユーザーのターン
             if self.player_no == turn_pos % 4:

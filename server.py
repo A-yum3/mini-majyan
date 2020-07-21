@@ -107,6 +107,8 @@ while True:
     p = idCount % 4
     idCount += 1
 
+    # TODO: ここを調整する
+
     for i in range(4):
         if not connection_state[i]:
             connection_state[i] = True

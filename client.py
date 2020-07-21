@@ -112,7 +112,6 @@ class Client:
                 # 同期後、勝利プレイヤーがリセットを送る
                 if self.game.winner_player.name == self.player_no:
                     self.n.send("new_ba")
-                time.sleep(3)
                 continue
 
             if self.player.ready or player_other1.ready or player_other2.ready or player_other3.ready:
@@ -132,6 +131,7 @@ class Client:
 
             # 場が変わったら場を描画
             if current_ba_count != self.game.ba_count:
+                time.sleep(3)
                 print("Change ba")
                 pg.mixer.music.play(-1)
                 current_ba_count = self.game.ba_count

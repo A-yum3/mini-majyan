@@ -1,4 +1,4 @@
-import enum
+import time
 from pickle import *
 import pygame as pg
 from pygame import display, draw
@@ -139,15 +139,7 @@ class Client:
                 if current_ba_count == 3:
                     self.drawing(self.get_olas_list())
                     pg.time.delay(2000)
-                self.drawing(
-                    [*self.get_bg_img_list(),
-                     *self.get_dora_list(),
-                     *self.get_tepai_others_list(),
-                     *self.get_tepai_list(),
-                     *self.get_info_text_list(current_ba_count),
-                     #  *self.remove_nokori_text_list(),
-                     *self.get_nokori_text_list(),
-                     *self.get_wind_list(current_ba_count)])
+                self.drawing_change_ba_screen(current_ba_count)
 
             # ターン毎に捨て牌と他家ツモ表示
             if current_turn != self.game.current_turn:
@@ -257,6 +249,18 @@ class Client:
         rect_list = []
         rect_list.append(self.screen.blit(self.olas_img, (300, 300)))
         return rect_list
+
+    def drawing_change_ba_screen(self, current_ba_count):
+        time.sleep(2)
+        self.drawing(
+            [*self.get_bg_img_list(),
+            *self.get_dora_list(),
+            *self.get_tepai_others_list(),
+            *self.get_tepai_list(),
+            *self.get_info_text_list(current_ba_count),
+            #  *self.remove_nokori_text_list(),
+            *self.get_nokori_text_list(),
+            *self.get_wind_list(current_ba_count)])
 
     # return: 他家の手牌Rect_list
     def get_tepai_others_list(self):

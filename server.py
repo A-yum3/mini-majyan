@@ -90,13 +90,10 @@ def threaded_client(conn, p, gameId):
         connection_state[p] = False
         # del games[gameId]
         # print("Closing Game", gameId)
-    except:
-        pass
-    try:
         if not(connection_state[0]
-        and connection_state[1]
-        and connection_state[2]
-        and connection_state[3]):
+        or connection_state[1]
+        or connection_state[2]
+        or connection_state[3]):
             del games[gameId]
             print("Closing Game", gameId)
     except:

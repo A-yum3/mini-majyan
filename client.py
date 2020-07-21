@@ -80,7 +80,7 @@ class Client:
         current_tiles_len = 0
 
         while self.running:
-            self.clock.tick(60)
+            self.clock.tick(20)
             try:
                 self.game = self.n.send("get")
                 # print("send get")

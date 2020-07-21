@@ -169,7 +169,6 @@ class Client:
                 if self.player.action == 0:
                     self.n.send("tumo")
                     print("send tumo")
-                    time.sleep(1)
                     continue
                 if self.player.action == 1:
                     self.drawing(self.get_tepai_list())
@@ -674,6 +673,7 @@ class Client:
             self.se_noten.play()
             self.drawing([self.screen.blit(self.bg_img_opa60, (0, 0)),
                           self.screen.blit(text, (450, 450))])
+        time.sleep(5)
 
     # return: 最終リザルト発表の背景Rect_list
     def get_last_result_screen_bg_list(self):

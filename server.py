@@ -16,13 +16,13 @@ try:
 except socket.error as e:
     str(e)
 
-s.listen(4)
+s.listen()
 print("接続を待っています。サーバを開始します")
 
 connected = set()
 games = {}
 idCount = 0
-
+connection_state = [False, False, False, False]
 
 def threaded_client(conn, p, gameId):
     global idCount
@@ -75,20 +75,25 @@ def threaded_client(conn, p, gameId):
                         game.ready_player(p)
                         print(f'{p}: ready')
 
+                    print(game)
                     conn.sendall(pickle.dumps(game))
             else:
                 break
-        except Exception as e:
-            print(traceback.format_exc(e))
+        except:
             break
 
     print("接続を失いました")
-    try:
+    idCount -= 1
+    connection_state[p] = False
+    # del games[gameId]
+    # print("Closing Game", gameId)
+    if not(connection_state[0]
+    or connection_state[1]
+    or connection_state[2]
+    or connection_state[3]):
         del games[gameId]
         print("Closing Game", gameId)
-    except:
-        pass
-    idCount -= 1
+    print(idCount)
     conn.close()
 
 
@@ -98,6 +103,14 @@ while True:
 
     p = idCount % 4
     idCount += 1
+
+    # TODO: ここを調整する
+
+    for i in range(4):
+        if not connection_state[i]:
+            connection_state[i] = True
+            p = i
+            break
 
     gameId = (idCount - 1) // 4
     if idCount % 4 == 1:

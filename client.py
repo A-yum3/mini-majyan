@@ -1,4 +1,4 @@
-import enum
+import time
 from pickle import *
 import pygame as pg
 from pygame import display, draw
@@ -7,7 +7,8 @@ from pygame.locals import *
 from player import *
 from settings import *
 from tile import *
-
+from network import *
+import asyncio
 
 class Client:
     def __init__(self, n, win):
@@ -80,7 +81,7 @@ class Client:
         current_tiles_len = 0
 
         while self.running:
-            self.clock.tick(30)
+            self.clock.tick(20)
             try:
                 self.game = self.n.send("get")
                 # print("send get")
@@ -129,6 +130,7 @@ class Client:
                     self.is_ron = False
                 self.drawend_result = False
                 self.result_flow()
+                time.sleep(2)
                 self.n.send("ready")
                 print("send ready")
                 pg.time.delay(3000)
@@ -143,6 +145,9 @@ class Client:
             if current_turn == 23:
                 continue
 
+            if self.player.ready or player_other1.ready or player_other2.ready or player_other3.ready:
+                continue
+
             # 場が変わったら場を描画
             if current_ba_count != self.game.ba_count:
                 print("Change ba")
@@ -150,18 +155,8 @@ class Client:
                 current_ba_count = self.game.ba_count
                 current_tiles_len = 0
                 current_turn = -1
-                if current_ba_count == 3:
-                    self.drawing(self.get_olas_list())
-                    pg.time.delay(2000)
-                self.drawing(
-                    [*self.get_bg_img_list(),
-                     *self.get_dora_list(),
-                     *self.get_tepai_others_list(),
-                     *self.get_tepai_list(),
-                     *self.get_info_text_list(current_ba_count),
-                     #  *self.remove_nokori_text_list(),
-                     *self.get_nokori_text_list(),
-                     *self.get_wind_list(current_ba_count)])
+                self.drawing_change_ba_screen(current_ba_count)
+
 
             # ターン毎に捨て牌と他家ツモ表示
             if current_turn != self.game.current_turn:
@@ -184,13 +179,14 @@ class Client:
                 self.drawing([*self.remove_nokori_text_list(),
                               *self.get_nokori_text_list()])
 
+            pg.display.update()
+
             # このユーザーのターン
             if self.player_no == turn_pos % 4:
 
                 if self.player.action == 0:
                     self.n.send("tumo")
                     print("send tumo")
-                    pg.time.delay(1000)
                     continue
                 if self.player.action == 1:
                     self.drawing(self.get_tepai_list())
@@ -223,13 +219,14 @@ class Client:
                     and player_other1.judge_phase_end
                     and player_other2.judge_phase_end
                         and player_other3.judge_phase_end):
-                    self.n.send("next")
-                    print("send next")
 
                     # 流局
                     if len(self.game.tiles) <= 0:
                         self.n.send("ryukyoku")
                         print("send ryukyoku")
+                    else:
+                        self.n.send("next")
+                        print("send next")
 
             # 別のユーザーのターンの時
             else:
@@ -269,6 +266,18 @@ class Client:
         rect_list = []
         rect_list.append(self.screen.blit(self.olas_img, (300, 300)))
         return rect_list
+
+    # return: None, 場が変わった時の初期描画
+    def drawing_change_ba_screen(self, current_ba_count):
+        self.drawing(
+            [*self.get_bg_img_list(),
+            *self.get_dora_list(),
+            *self.get_tepai_others_list(),
+            *self.get_tepai_list(),
+            *self.get_info_text_list(current_ba_count),
+            #  *self.remove_nokori_text_list(),
+            *self.get_nokori_text_list(),
+            *self.get_wind_list(current_ba_count)])
 
     # return: 他家の手牌Rect_list
     def get_tepai_others_list(self):
@@ -758,6 +767,7 @@ class Client:
         player_list = sorted(game.player_list,
                              key=lambda player: player.point, reverse=True)
         # 3, 2, 1, 0...
+        # スペック依存の可能性
         for i in reversed(range(4)):
             self.drawing(
                 self.get_last_result_screen_rank_player_list(i, player_list[i]))
@@ -765,8 +775,7 @@ class Client:
                 self.se_rank1.play()
             else:
                 self.se_rank2_4.play()
-
-            pg.time.delay(2000)
+            time.sleep(2)
 
         self.drawing(self.screen.blit(self.kakunin_img, (800, 800)))
         # TODO: 確認ボタンクリックでタイトルに戻る

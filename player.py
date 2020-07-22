@@ -43,6 +43,7 @@ class User(Player):
     def dahai(self):
         hand = None
         while hand == None:
+            pg.display.update()
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     pg.quit()
